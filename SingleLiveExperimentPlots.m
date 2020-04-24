@@ -10,7 +10,7 @@ if isempty(varargin)%looks for the folder to analyze
     FolderTemp=uigetdir(DefaultDropboxFolder,'Select folder with data to analyze');
     Dashes=strfind(FolderTemp,filesep);
     Prefix=FolderTemp((Dashes(end)+1):end);
-elseMeanAccumulatedFluoOn
+else
     Prefix=varargin{1};
     for i=2:length(varargin)
     end
@@ -195,7 +195,7 @@ close all
 % only
 AllParticlesWithNans = AllParticles;
 AllParticlesWithNans(AllParticlesWithNans==0) = nan;
-MeanOn = nanmean(AllParticlesWithNans,1);
+MeanFluoOn = nanmean(AllParticlesWithNans,1);
 SDOn = nanstd(AllParticlesWithNans,1); %standard deviation
 SEMOn = SDOn./sqrt(sum(~isnan(AllParticlesWithNans),1)); %standard error of the mean
 
@@ -207,7 +207,7 @@ MeanFluoAll = mean(AllParticlesWithOff,1);
 SDAll = std(AllParticlesWithOff,1);
 SEMAll = SDAll./sqrt(ParticlesPerFrame);
 
-errorbar(MovieTimes,MeanOn,SEMOn,'Color',[0.7 0.9 0.7],...
+errorbar(MovieTimes,MeanFluoOn,SEMOn,'Color',[0.7 0.9 0.7],...
     'LineStyle','-','LineWidth',1.5,'Marker','o','MarkerFaceColor',[0.4 0.9 0.4],...
     'MarkerEdgeColor','none','CapSize',0)
 hold on
@@ -224,7 +224,7 @@ saveas(gcf, [ResultsFiguresFolder '\MeanSpotFluorescence_bars.fig'])
 close all
 
 % now the same but with shadedErrorBar
-shadedErrorBar(MovieTimes,MeanOn,SDOn./sqrt(ParticlesPerFrame),'lineProps',{'Color',[0.5 0.8 0.5],'LineWidth',2})
+shadedErrorBar(MovieTimes,MeanFluoOn,SDOn./sqrt(ParticlesPerFrame),'lineProps',{'Color',[0.5 0.8 0.5],'LineWidth',2})
 hold on
 shadedErrorBar(MovieTimes,MeanFluoAll,SDOn./sqrt(ParticlesPerFrame),'lineProps',{'Color',[0.5 0.5 0.8],'LineWidth',2})
 hold off
@@ -252,7 +252,7 @@ close all
 figure
 plot(MovieTimes,AllParticlesWithOff','-','Color',[1 0.7 0.7],'LineWidth',1.2)
 hold on
-errorbar(MovieTimes,MeanOn,SDOn./sqrt(ParticlesPerFrame),'Color',[0.4 0.9 0.5],...
+errorbar(MovieTimes,MeanFluoOn,SDOn./sqrt(ParticlesPerFrame),'Color',[0.4 0.9 0.5],...
     'LineStyle','-','LineWidth',1.5,'Marker','o','MarkerFaceColor',[0.1 0.85 0.1],...
     'MarkerEdgeColor','none','CapSize',0)
 
@@ -414,7 +414,7 @@ InstFractionON = ParticlesPerFrame./CellsPerFrame;
 figure
 plot([FrameInfo.Time]./60,TotalSpotFluoPerFrame,'-bd','MarkerSize',10,'MarkerFaceColor','b')
 hold on
-plot([FrameInfo.Time]./60,MeanOn .* NucleiWithSpotPerFrame ,'-rs','MarkerFaceColor','r')
+plot([FrameInfo.Time]./60,MeanFluoOn .* NucleiWithSpotPerFrame ,'-rs','MarkerFaceColor','r')
 hold off
 xlabel('time (min)')
 ylabel('activity')
@@ -435,7 +435,7 @@ figure
 plot([FrameInfo.Time]./60,MeanFluoAll,'-gd','MarkerSize',10,'MarkerFaceColor','g')
 hold on
 %plot([FrameInfo.Time]./60,TotalSpotFluoPerFrame,'-md','MarkerSize',10,'MarkerFaceColor','m')
-plot([FrameInfo.Time]./60,MeanOn .* InstFractionON ,'-ks','MarkerFaceColor','k')
+plot([FrameInfo.Time]./60,MeanFluoOn .* InstFractionON ,'-ks','MarkerFaceColor','k')
 hold off
 xlabel('time (min)')
 ylabel('activity')
@@ -444,7 +444,7 @@ saveas(gcf, [ResultsFiguresFolder '\Decomposition_SanityCheck2.fig'])
 
 save([ResultsFiguresFolder '\InstFractionON'],'InstFractionON');
 save([ResultsFiguresFolder '\MeanFluoAll'],'MeanFluoAll');
-save([ResultsFiguresFolder '\MeanOn'],'MeanOn');
+save([ResultsFiguresFolder '\MeanFluoOn'],'MeanFluoOn');
 
 
 
@@ -583,18 +583,18 @@ clear MeanOff SDOff SEOff PartFrames PartOff OffSets
 % the fold change with respoect to t=0 would be infinite.
 close all
 DetectionThresh = 10;%AU of the weakes possible spot
-TotFluoTheo = CellsPerFrame .* MeanOn;
+TotFluoTheo = CellsPerFrame .* MeanFluoOn;
 FirstDetectionFrame = min([CompiledParticles.Frame]);
 InitialTotFluo = TotalSpotFluoPerFrame(FirstDetectionFrame);
 InitialTotFluoTheo = TotFluoTheo(FirstDetectionFrame);
 InitialFractionON = InstFractionON(FirstDetectionFrame); 
-InitialMeanFluoActive = MeanOn(FirstDetectionFrame);
+InitialMeanFluoActive = MeanFluoOn(FirstDetectionFrame);
 
 %normalize to the first detection frame
 NormTotFluo = TotalSpotFluoPerFrame./InitialTotFluo;
 NormTotFluoTheo = TotFluoTheo./InitialTotFluoTheo;
 NormFractionON = InstFractionON./InitialFractionON;
-NormMeanFluoActive = MeanOn./InitialMeanFluoActive;
+NormMeanFluoActive = MeanFluoOn./InitialMeanFluoActive;
 
 %calculate the fold change with respect to the first detection frame, 
 % at the frame of the maximum total fold change
