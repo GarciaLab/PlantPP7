@@ -26,19 +26,19 @@ GoodPrefixes = HSP101Prefixes;
 tic %to time how long this takes
 for p = 1:length(GoodPrefixes)    
     PrefixName = GoodPrefixes{p};
-    plantTracesPlotsv8(PrefixName);
+    SingleLiveExperimentPlots(PrefixName);
     %SpatialClustering(PrefixName);
 end
 toc
 
 
 %% Pick a group of prefixes and intialize a struct to store everything about each replicate
-Prefixes =HSP101Prefixes;
+Prefixes = HSP101Prefixes;
 for p = 1:length(Prefixes)
-    DatasetsStruct(p).PrefixName = Prefixes{p};
+    DatasetsStruct(p).Prefix = Prefixes{p};
 end
 
-%% Add data from individual replicates to the DatasetsStruct structure
+% Add data from individual replicates to the DatasetsStruct structure
 
 % MeanFluoAll = the mean spot fluorescence across all cells as a function
 % of time. Undetected cells are asigned a 0.
@@ -66,7 +66,7 @@ end
 % CellsPerFrame = the median number of nuclei per frame;
 
 DatasetsStruct = GetMatFiles(DatasetsStruct,Prefixes,DynamicsResultsPath,'MeanFluoAll',...
-    'MeanOn','InstFractionON','AllParticles','IntegralSoFarWithOff');
+    'MeanFluoOn','InstFractionON','AllParticles','IntegralSoFarWithOff');
 
 FigureNames = {'CellsPerFrame','MeanAccumulatedFluoOn','MeanAccumulatedFluoAll'};
 for f = 1:length(FigureNames)
@@ -80,228 +80,90 @@ for i = 1:length(Prefixes)
     Prefix = Prefixes{i};
     FrameInfo = load([DynamicsResultsPath '\' Prefix '\FrameInfo.mat']);
     FrameInfo = FrameInfo.FrameInfo;
-    DatasetsStruct(i).AbsTime = [FrameInfo.Time]; %this is in seconds!
+    DatasetsStruct(i).AbsTime = [FrameInfo.Time]./60; %this is in minutes!
 end
 
-%% Plot the mean accumulated spot fluoresence of each experiment, all experiments in one figure
+% *%*%*%*%*%*%*%*%*%*%*%*% TO DO *%*%*%*%*%*%*%*%*%*%*%*%*%*%
 
-figure % MEAN ACCUMULATED RNA PER CELL PER EXPERIMENT
-hold on
-LegendNames = {};
-ColorMap = viridis(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).FrameTime;
-    Y = DatasetsStruct(i).MeanAccumulatedmRNAAll;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'LineWidth',3,'Color',ColorMap(i,:))%,[ColorMap(i,:)+[0.7 .7 .7]]./2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('mean accumulated spot fluorescence per cell')
-title('Mean Accumulated Spot Fluorescence')
+% create a folder to store the analysis figures and .mat files.
+%% Plot all experiments in one figure
 
-figure % MEAN SPOT FLUORESCENCE ALL CELLS
-hold on
-LegendNames = {};
-ColorMap = viridis(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).FrameTime;
-    Y = DatasetsStruct(i).MeanFluoAll;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'LineWidth',3,'Color',ColorMap(i,:))%,[ColorMap(i,:)+[0.7 .7 .7]]./2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('mean spot fluorescence ')
-title('Mean Spot Fluorescence across all cells')
-
-figure % MEAN SPOT FLUORESCENCE OF ACTIVE CELLS
-hold on
-LegendNames = {};
-ColorMap = viridis(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).FrameTime;
-    Y = DatasetsStruct(i).MeanFluoOn;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'LineWidth',3,'Color',ColorMap(i,:))%,[ColorMap(i,:)+[0.7 .7 .7]]./2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('mean spot fluorescence ')
-title('Mean Spot Fluorescence of Active Cells')
-
-figure % FRACTION OF ACTIVE CELLS
-hold on
-LegendNames = {};
-ColorMap = viridis(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).FrameTime;
-    Y = DatasetsStruct(i).InstFractionOn;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'LineWidth',3,'Color',ColorMap(i,:))%,[ColorMap(i,:)+[0.7 .7 .7]]./2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('fraction of active cells')
-title('Instantaneous Fraction of Active cells')
+%mean integrated spot fluorescence across all cells
+plotAllPrefixes(DatasetsStruct,'AbsTime','MeanAccumulatedFluoAll')
+%mean spot fluorescence as a function of time for all cells
+plotAllPrefixes(DatasetsStruct,'AbsTime','MeanFluoAll')
+%mean spot fluorescence as a function of time for active cells only
+plotAllPrefixes(DatasetsStruct,'AbsTime','MeanFluoOn')
+%mean spot fluorescence as a function of time for active cells only
+plotAllPrefixes(DatasetsStruct,'AbsTime','InstFractionON')
 
 
+%% line up datasets in time and look at results again
+[DatasetsStruct(:).shiftedBefore] = deal(0); %here we keep track of wether they have been shifted or not already
+alignedDatasetsStruct = DatasetsStruct;
+alignedDatasetsStruct = findshifts(alignedDatasetsStruct);
 
-%% shift datasets in time to match them up
-if strfind(Prefixes{1},'HSP101')
-    shifts = [7 14 16 16 16 0 16 16 16 8]; %for HSP101 datasets
-    disp('working on HSP101 replicates')
-elseif strfind(Prefixes{1},'HsfA2')
-    shifts = [8 0 0 19];  %for HsfA2 datasets
-    disp('working on HsfA2 replicates')
-else
-    disp('Something wrong with the time offsets')
-end
+%mean integrated spot fluorescence across all cells
+plotAllPrefixes(alignedDatasetsStruct,'AbsTime','MeanAccumulatedFluoAll')
+%mean spot fluorescence as a function of time for all cells
+plotAllPrefixes(alignedDatasetsStruct,'AbsTime','MeanFluoAll')
+%mean spot fluorescence as a function of time for active cells only
+plotAllPrefixes(alignedDatasetsStruct,'AbsTime','MeanFluoOn')
+%mean spot fluorescence as a function of time for active cells only
+plotAllPrefixes(alignedDatasetsStruct,'AbsTime','InstFractionON')
 
-frameRate = 1; %minutes
-for i = 1:length(DatasetsStruct)
-    TimeShiftVector = [0:frameRate:(shifts(i)-frameRate)];
-    DatasetsStruct(i).ShiftedFrameTime = [TimeShiftVector DatasetsStruct(i).FrameTime + shifts(i)];
-    DatasetsStruct(i).ShiftedAccumulatedmRNA = [zeros(1,length(TimeShiftVector)) DatasetsStruct(i).MeanAccumulatedmRNAAll];
-    DatasetsStruct(i).ShiftedMeanFluoAll = [zeros(1,length(TimeShiftVector)) DatasetsStruct(i).MeanFluoAll];
-    DatasetsStruct(i).ShiftedMeanFluoOn = [zeros(1,length(TimeShiftVector)) DatasetsStruct(i).MeanFluoOn];
-    DatasetsStruct(i).ShiftedInstFractionOn = [zeros(1,length(TimeShiftVector)) DatasetsStruct(i).InstFractionOn];
-end
+%% Calculate the mean accumulated mRNA based in integrated spot fluorescence
+% we will assume no degradation and an arbitrary degradation rate.
 
-figure %   MEAN ACCUMULATED RNA ALL CELLS PER EXPERIMENT
-hold on
-LegendNames = {};
-ColorMap = jet(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).ShiftedFrameTime;
-    Y = DatasetsStruct(i).ShiftedAccumulatedmRNA;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'Color',ColorMap(i,:),'LineWidth',3)%,[ColorMap(i,:)+[1 1 1]]./2,'LineWidth',2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('mean spot fluorescence')
-title('Mean Accumulated mRNA - shifted')
+% first find which is the first time point after having
+% aligned everything
+fun = @(x) x(1);
+t0 =  max(cellfun(fun,cellfun(@find,{alignedDatasetsStruct.MeanFluoOn},'UniformOutput',false)));
 
-figure %   MEAN OF ALL CELLS
-hold on
-LegendNames = {};
-ColorMap = jet(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).ShiftedFrameTime;
-    Y = DatasetsStruct(i).ShiftedMeanFluoAll;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'Color',ColorMap(i,:),'LineWidth',3)%,[ColorMap(i,:)+[1 1 1]]./2,'LineWidth',2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('mean spot fluorescence')
-title('Mean Fluorescence of All Cells - shifted')
+samplingTimes = [1:60]; %in minutes
+gamma = 0.0116; %degradation rate of mRNA in mRNAs/frame or /min. log(2)/gamma = half life.
 
-figure %   MEAN OF ACTIVE CELLS
-hold on
-LegendNames = {};
-ColorMap = jet(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).ShiftedFrameTime;
-    Y = DatasetsStruct(i).ShiftedMeanFluoOn;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'Color',ColorMap(i,:),'LineWidth',3)%,[ColorMap(i,:)+[1 1 1]]./2,'LineWidth',2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('mean spot fluorescence')
-title('Mean Fluorescence of Active Cells - shifted')
+[AccFluoDataForMean,AccFluoDataForMean_deg] = ...
+    MeanAccumulatedmRNA(alignedDatasetsStruct,'MeanAccumulatedFluoAll',samplingTimes+t0,gamma);
 
-figure % FRACTION OF ACTIVE CELLS
-hold on
-LegendNames = {};
-ColorMap = jet(length(DatasetsStruct));
-for i = 1:length(DatasetsStruct)
-    X = DatasetsStruct(i).ShiftedFrameTime;
-    Y = DatasetsStruct(i).ShiftedInstFractionOn;
-    legendNames{i} = ['dataset #' num2str(i) ' ' DatasetsStruct(i).Prefix];
-    plot(X,Y,'Color',ColorMap(i,:),'LineWidth',3)%,[ColorMap(i,:)+[1 1 1]]./2,'LineWidth',2)
-end
-hold off
-legend(legendNames,'Interpreter', 'none')
-xlabel('time (min)')
-ylabel('fraction of active cells')
-title('fraction of active cells - shifted')
-
-
-%% plot all the shifted datasets and the mean and SEM on top
-clear MeanFluoOnDataForMean MeanFluoAllDataForMean FractionONDataForMean SamplingTimes...
-AccFluoDataForMean AccFluoDataForMean_deg
-SamplingTimes = [0 5 10 15 30 60];
-t0=17;
-SamplingTimes = SamplingTimes+t0;
-%AllDataForMean = nan(length(DatasetsStruct),length(SamplingTimes));
-
-figure % MEAN ACCUMULATED SPOT FLUORESCENCE
-gamma = 0.0116; %degradation rate of mRNA in mRNAs/frame or /min, equivalent to half life of 1hr
-% log(2)/gamma = half life.
-% gamma = 0.0058; % half life of two hours
- gamma = 0.0023; %half life of five hours
-% gamma = 0.0462; % half life of 15 minutes
-% gamma = 0.0231; % half life of 30 minutes
-% gamma = 0.1386; %half life of 5 minutes
 
 hold on
-for i = 1:length(DatasetsStruct)
-    clear AccuFluoDeg
-    Time = DatasetsStruct(i).ShiftedFrameTime;
-    AccuFluo = DatasetsStruct(i).ShiftedAccumulatedmRNA;
-    AccuFluoDeg(1) = AccuFluo(1);
-    
-    for t = 2:length(Time)
-        Production = AccuFluo(t) - AccuFluo(t-1);
-        AccuFluoDeg = [AccuFluoDeg nansum([AccuFluoDeg(t-1) -gamma*AccuFluoDeg(t-1)...
-             Production])];
-    end
-    plot(Time-t0,AccuFluo,'Color',[.7 .7 1],'LineWidth',2)
-    plot(Time-t0,AccuFluoDeg,'Color',[1 .8 .7],'LineWidth',2)
-
-    
-    %interpolate and find the fluorescence closest to each sampling time
-    interpVector = linspace(0,ceil(max(Time)),500);
-    interpAccFluo = interp1(Time,AccuFluo,interpVector);
-    interpAccFluoDeg = interp1(Time,AccuFluoDeg,interpVector);
-    %plot(interpVector,interpAccFluo,'r.')
-    for t = 1:length(SamplingTimes)
-        [dummy index ] = min(abs(interpVector-SamplingTimes(t)));
-        AccFluoDataForMean(i,t) = interpAccFluo(index);
-        AccFluoDataForMean_deg(i,t) = interpAccFluoDeg(index);
-    end
- 
-end
-errorbar(SamplingTimes-t0,nanmean(AccFluoDataForMean),nanstd(AccFluoDataForMean)./sqrt(i),'b','LineWidth',3,'CapSize',0)
-errorbar(SamplingTimes-t0,nanmean(AccFluoDataForMean_deg),nanstd(AccFluoDataForMean_deg)./sqrt(i),'r','LineWidth',3,'CapSize',0)
-
+errorbar(samplingTimes,nanmean(AccFluoDataForMean),nanstd(AccFluoDataForMean)./sqrt(i),'b','LineWidth',3,'CapSize',0)
+errorbar(samplingTimes,nanmean(AccFluoDataForMean_deg),nanstd(AccFluoDataForMean_deg)./sqrt(i),'r','LineWidth',3,'CapSize',0)
 hold off
+legend('without degradation',['half life ' num2str(log(2)/gamma) 'min']);
 ylabel('mean accumulated spot fluorescence')
 xlabel('time (min)')
 title('Mean Accumulated Spot Fluorescence')
 
-% now this is the normalized (to t=60min) version of the mean accumulated spot
-% fluorescence to compare with RT-qPCR
-figure
-NormMeans = AccFluoDataForMean./nanmean(AccFluoDataForMean(:,6));
-NormMeans_deg = AccFluoDataForMean_deg./nanmean(AccFluoDataForMean_deg(:,6));
-hold on
-errorbar(SamplingTimes-t0,nanmean(NormMeans),nanstd(NormMeans)./sqrt(i),'b','LineWidth',3,'CapSize',0)
-errorbar(SamplingTimes-t0,nanmean(NormMeans_deg),nanstd(NormMeans_deg)./sqrt(i),'r','LineWidth',3,'CapSize',0)
-hold off
-legend('without degradation','with degradation')
-xlabel('time')
-ylabel('normalized integrated fluorescence')
+
+% *%*%*%*%*%*%*%*%*%*%*%*% TO DO *%*%*%*%*%*%*%*%*%*%*%*%*%*%
+
+% deal with normalization to t=60
+
+% store RT-qPCR data somewhere and then programatically access it and plot
+% it together with the accumulated fluo data
+
+
+
+
+%% Means across replicates of: Instantaneous fraction on, spot fluo across all cells and
+% spot fluo across active cells.
+
+% *%*%*%*%*%*%*%*%*%*%*%*% TO DO *%*%*%*%*%*%*%*%*%*%*%*%*%*%
+
+% make a function that calculates de mean across rows of any struct entry
+% then use it to plot stuff
+
+
+
+
+
+
+
+
+
+
 
 %% Mean fraction competent
 
@@ -327,7 +189,6 @@ errorbar(mean(ReplicatesFractionCompetent),std(ReplicatesFractionCompetent)./sqr
 hold off
 ylim([0 1.2])
 title('Fraction Competent')
-
 
 
 %%
