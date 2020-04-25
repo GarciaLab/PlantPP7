@@ -16,7 +16,7 @@ else
 end
 
 frameRate = 1; %minutes
-CellStruct = struct2cell(DataStruct);
+CellStruct = struct2cell(DataStruct); % I need this to get the field names and index them later
 NumberOfFields = size(CellStruct,1);
 FieldNames = fieldnames(DataStruct);
 NumberOfFields = length(FieldNames);
@@ -24,18 +24,22 @@ NumberOfFields = length(FieldNames);
 for f = 1:NumberOfFields
     FieldData = DataStruct.(FieldNames{f});
     if size(FieldData,1)==1 && isnumeric(FieldData)%if the data is a vector array of 1 x frames  
-        if ~DataStruct(1).shiftedBefore
-            [DataStruct(:).shiftedBefore] = deal(1);
-        for p = 1:length(DataStruct)            
-            %this is a vector of 0s that we're appending in front of the shifted datasets
-            TimeShiftVector = [0:frameRate:(shifts(p)-frameRate)];
-            if strcmp(FieldNames(f),'AbsTime') %we have to deal with time a little differently
-                DataStruct(p).(FieldNames{f}) = [TimeShiftVector  DataStruct(p).(FieldNames{f}) + shifts(p)];
-            else %for the rest of the fileds (actual data) we just add 0s at the front
-                DataStruct(p).(FieldNames{f}) = [zeros(1,length(TimeShiftVector)) DataStruct(p).(FieldNames{f}) ];
+%        if ~DataStruct(1).shiftedBefore
+%            [DataStruct(:).shiftedBefore] = deal(1); %mark the struct to show this code has been run before
+            for p = 1:length(DataStruct)
+                %this is a vector of 0s that we're appending in front of the shifted datasets
+                TimeShiftVector = [0:frameRate:(shifts(p)-frameRate)];
+                if strcmp(FieldNames(f),'AbsTime') %we have to deal with time a little differently
+                    DataStruct(p).(FieldNames{f}) = [TimeShiftVector  DataStruct(p).(FieldNames{f}) + shifts(p)];
+                else %for the rest of the fields (actual data) we just add 0s at the front
+                    DataStruct(p).(FieldNames{f}) = [zeros(1,length(TimeShiftVector)) DataStruct(p).(FieldNames{f})];
+                end
             end
-        end
-        end
+%        end
+    elseif size(FieldData,1)> 1 %deal with the arrays here
+        DataStruct(p).(FieldNames{f}) = [zeros(size(DataStruct(p).(FieldNames{f}),1),length(TimeShiftVector))...
+            DataStruct(p).(FieldNames{f})];
+        %disp('arrays not finished')
     end
 end
 
