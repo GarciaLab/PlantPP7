@@ -1,8 +1,8 @@
-function [AccFluoDataForMean,AccFluoDataForMean_deg] =  ...
+function AccFluoDataForMean_deg =  ...
     MeanAccumulatedmRNA(Struct,AccumulatedFluoField,samplingTimes,gamma)
-%returs two arrays, the first one contains the accumulated fluorescence
-%(columns) of all replicates (rows). The second array is the same except
-%that a constant degradation rate was simulated.
+%returs an array 'AccFluoDataForMean_deg' containing the accumulated fluorescence
+%(columns) of all replicates (rows) with a simulated degradation rate given
+%by gamma
 
 
 % we are going to take the mean of discrete time-dependent data
@@ -38,19 +38,16 @@ for p = 1:length(Struct)
         AccuFluoDeg = [AccuFluoDeg nansum([mRNApreviousStep;Degradation;Production])]; %append the simulation results to a growing vector
     end
 
-%     plot(Time-t0,AccuFluo,'Color',[.7 .7 1],'LineWidth',2)
-%     plot(Time-t0,AccuFluoDeg,'Color',[1 .8 .7],'LineWidth',2)
-
     % to get the mean across the simulated accumulated mRNA we will first
     % interpolate
     interpPoints = 500; %number of elements in the interpolated vector
     interpVector = linspace(0,ceil(max(Time)),interpPoints);
-    interpAccFluo = interp1(Time,AccuFluo,interpVector);
+    %interpAccFluo = interp1(Time,AccuFluo,interpVector);
     interpAccFluoDeg = interp1(Time,AccuFluoDeg,interpVector);
     
     for t = 1:length(samplingTimes)
         [dummy index ] = min(abs(interpVector-samplingTimes(t))); %index of the point closest to the picked sampling time
-        AccFluoDataForMean(p,t) = interpAccFluo(index);
+        %AccFluoDataForMean(p,t) = interpAccFluo(index);
         AccFluoDataForMean_deg(p,t) = interpAccFluoDeg(index);
     end
     

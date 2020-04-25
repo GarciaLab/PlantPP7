@@ -7,7 +7,6 @@ Prefixes = {DataStruct.Prefix};
 % look at the first prefix to find out what shifts to apply
 if strfind(Prefixes{1},'HSP101')
     shifts = [7 14 16 16 16 0 16 16 16 8]; %for HSP101 datasets
-    shifts = [6 4 1 1 1 10 1 1];
     disp('working on HSP101 replicates')
 elseif strfind(Prefixes{1},'HsfA2')
     shifts = [8 0 0 19];  %for HsfA2 datasets
@@ -22,6 +21,7 @@ NumberOfFields = size(CellStruct,1);
 FieldNames = fieldnames(DataStruct);
 NumberOfFields = length(FieldNames);
 
+% first, find which is the 
 
 
 for f = 1:NumberOfFields
@@ -37,7 +37,7 @@ for f = 1:NumberOfFields
         end
     elseif size(FieldData,1)> 1 %deal with the arrays here
         FieldData = DataStruct(p).(FieldNames{f});
-        AlignedFieldData = FieldData(:,(shifts(p):end));
+        AlignedFieldData = FieldData(:,(shifts(p)-1:end));
         DataStruct(p).(FieldNames{f}) = AlignedFieldData;
     end
 end
