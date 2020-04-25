@@ -3,7 +3,9 @@
 %get data from figures stored in Single_Traces_Prefix
 % make a list of prefixes to use to make paths to the data/figures.
 
-DynamicsResultsPath = 'S:\Simon\Dropbox\DynamicsResults';
+%DynamicsResultsPath = 'S:\Simon\Dropbox\DynamicsResults';
+DynamicsResultsPath = '/Users/simon_alamos/Dropbox/DynamicsResults';
+CodeRepoPath = '/Users/simon_alamos/Documents/MATLAB/PlantPP7';
 
 
 % a list of prefixes I want to combine into a single figure
@@ -78,7 +80,7 @@ end
 % Finally, add absolute time information to our struct 
 for i = 1:length(Prefixes)
     Prefix = Prefixes{i};
-    FrameInfo = load([DynamicsResultsPath '\' Prefix '\FrameInfo.mat']);
+    FrameInfo = load([DynamicsResultsPath '/' Prefix '/FrameInfo.mat']);
     FrameInfo = FrameInfo.FrameInfo;
     DatasetsStruct(i).AbsTime = [FrameInfo.Time]; %this is in seconds!
 end
