@@ -6,6 +6,7 @@
 %DynamicsResultsPath = 'S:\Simon\Dropbox\DynamicsResults';
 DynamicsResultsPath = '/Users/simon_alamos/Dropbox/DynamicsResults';
 CodeRepoPath = '/Users/simon_alamos/Documents/MATLAB/PlantPP7';
+RTqPCR_Data_path = '/Users/simon_alamos/Dropbox/PlantPP7_data_for_figures/RTqPCR_raw_data';
 
 
 % a list of prefixes I want to combine into a single figure
@@ -19,6 +20,12 @@ HSP101Prefixes = {'2019-02-16-12R-HSP101_HS_7','2019-02-16-12R-HSP101_HS_5','201
     %'2018-10-23-AL12R-HSP101-3_HS'};
 
 PulsePrefixes = {'2019-02-16-12R-HSP101_HS_RT_HS_4','2019-02-16-12R-HSP101-HS_RT_HS'};
+
+%for figures
+set(0,'defaulttextfontsize',14);
+set(0,'defaultaxesfontsize',14);
+set(0, 'defaultTextFontName', 'Arial')
+
 
 %% Run the latest version of the post analysis code here
 GoodPrefixes = [HsfA2Prefixes EF1alphaPrefixes HSP101Prefixes PulsePrefixes];
@@ -89,67 +96,46 @@ end
 
 % create a folder to store the analysis figures and .mat files.
 %% Plot all experiments in one figure
-
-%mean integrated spot fluorescence across all cells
-plotAllPrefixes(DatasetsStruct,'AbsTime','MeanAccumulatedFluoAll')
-%mean spot fluorescence as a function of time for all cells
-plotAllPrefixes(DatasetsStruct,'AbsTime','MeanFluoAll')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(DatasetsStruct,'AbsTime','MeanFluoOn')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(DatasetsStruct,'AbsTime','InstFractionON')
-
+FieldsToPlot = {'MeanAccumulatedFluoAll','MeanFluoAll','MeanFluoOn','InstFractionON'};
+for f = 1:length(FieldsToPlot)
+    plotAllPrefixes(DatasetsStruct,FieldsToPlot{f});
+end
 
 %% line up datasets in time and look at results again
-[DatasetsStruct(:).shiftedBefore] = deal(0); %here we keep track of wether they have been shifted or not already
 alignedDatasetsStruct = DatasetsStruct;
 alignedDatasetsStruct = findshifts(alignedDatasetsStruct);
 
-%mean integrated spot fluorescence across all cells
-plotAllPrefixes(alignedDatasetsStruct,'AbsTime','MeanAccumulatedFluoAll')
-%mean spot fluorescence as a function of time for all cells
-plotAllPrefixes(alignedDatasetsStruct,'AbsTime','MeanFluoAll')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(alignedDatasetsStruct,'AbsTime','MeanFluoOn')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(alignedDatasetsStruct,'AbsTime','InstFractionON')
+FieldsToPlot = {'MeanAccumulatedFluoAll','MeanFluoAll','MeanFluoOn','InstFractionON'};
+for f = 1:length(FieldsToPlot)
+    plotAllPrefixes(alignedDatasetsStruct,FieldsToPlot{f});
+end
+
 
 %% Calculate the mean accumulated mRNA based in integrated spot fluorescence
 % we will assume no degradation and an arbitrary degradation rate.
+% also, with and without normalization to t=60
 
-% first find which is the first time point after having
-% aligned everything
-fun = @(x) x(1);
-t0 =  max(cellfun(fun,cellfun(@find,{alignedDatasetsStruct.MeanFluoOn},'UniformOutput',false)));
+samplingTimes = [0,5,10,15,30,60]; %in minutes, for interpolation in MeanAccumulatedmRNA function
+GammaVals = logspace(-4,-1,6); %degradation rate of mRNA in mRNAs/frame or /min. log(2)/gamma = half life in minutes
 
-samplingTimes = [1:60]; %in minutes
-gamma = 0.0116; %degradation rate of mRNA in mRNAs/frame or /min. log(2)/gamma = half life in minutes
+%figure without normalization, show several degradation rates
+[meanAccmRNA SEAccmRNA] = plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingTimes)
 
-AccFluoDataForMean_deg = ...
-    MeanAccumulatedmRNA(alignedDatasetsStruct,'MeanAccumulatedFluoAll',samplingTimes+t0,gamma);
-
-GammaVals = [0:0.0462]; Palette = viridis(length(GammaVals)); counter = 1;
-ForLegend = {};
-hold on
-for gamma = GammaVals
-    ForLegend{counte
-    Color = Palette(counter,:);
-    Ymean = nanmean(AccFluoDataForMean_deg);
-    YError = nanstd(AccFluoDataForMean_deg)./sqrt(i);
-    errorbar(samplingTimes,Ymean,YError,'Color',Color,'LineWidth',3,'CapSize',0)
-hold off
-legend('without degradation',['half life ' num2str(log(2)/gamma) 'min']);
-ylabel('mean accumulated spot fluorescence')
-xlabel('time (min)')
-title('Mean Accumulated Spot Fluorescence')
+%figure with normalization, show several degradation rates
+[meanAccmRNA_norm SEAccmRNA_norm] = ...
+    plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingTimes,60)
 
 
-% *%*%*%*%*%*%*%*%*%*%*%*% TO DO *%*%*%*%*%*%*%*%*%*%*%*%*%*%
+%% Compare integrated mRNA from microscopy with RT-qPCR data
 
-% deal with normalization to t=60
+% first, take a look at the RT-qPCR results.
+deltaCT_results_path = [RTqPCR_Data_path '/qPCR_deltaCTs.mat'];
+plotRTqPCRResults(deltaCT_results_path)
 
-% store RT-qPCR data somewhere and then programatically access it and plot
-% it together with the accumulated fluo data
+
+
+
+
 
 
 
@@ -184,7 +170,7 @@ for p = 1:length(Prefixes)
     FractionOnFile = dir([SingleTracesPath '\' '*FractionOn.mat']);
     FileName = FractionOnFile(1).name;
     FilePath = [SingleTracesPath '\'];
-    FractionON = struct2cell(load(fullfile(FilePath,FileName)))
+    FractionON = struct2cell(load(fullfile(FilePath,FileName)));
     ReplicatesFractionCompetent(p) = nanmax(cell2mat(FractionON));
 end
 

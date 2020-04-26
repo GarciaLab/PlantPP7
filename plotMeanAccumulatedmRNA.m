@@ -1,4 +1,4 @@
-function plotMeanAccumulatedmRNA(DataStruct,GammaVals,samplingTimes,normalizationTime)
+function ReplicatesData = plotMeanAccumulatedmRNA(DataStruct,GammaVals,samplingTimes,normalizationTime)
 
 %creates a figure showing the mean and standard error in the accumulated
 %mRNA as calculated from integrated spot fluorescence and a simulated
@@ -18,11 +18,13 @@ function plotMeanAccumulatedmRNA(DataStruct,GammaVals,samplingTimes,normalizatio
 
 % NORMALIZATION if this is not left empty the values will be normalized
 % (i.e divided by) the value at a given time in minutes.
-
-[~,sampligTimeIdx] = find(samplingTimes==normalizationTime);
+if exist('normalizationTime','var')
+    [~,sampligTimeIdx] = find(samplingTimes==normalizationTime);
+end
 figure % without normalization, show several degradation rates
 Palette = viridis(length(GammaVals));
 counter = 1;
+hold on
 for gamma = GammaVals
     ForLegend{counter} = num2str(log(2)/gamma); %degradation rate expressed as half life
     Color = Palette(counter,:);
@@ -32,10 +34,10 @@ for gamma = GammaVals
         Data = Data./nanmean(Data(:,sampligTimeIdx));
     end
     
+    ReplicatesData(:,:,counter) = Data; %first dim = replicates, second dim = time (specified by SAMPLINGTIMES argument), third dim = simulated degradation rate
     Ymean = nanmean(Data);
     YError = nanstd(Data)./sqrt(size(Data,1));
     errorbar(samplingTimes,Ymean,YError,'Color',Color,'LineWidth',3,'CapSize',0)
-    hold on
     counter = counter+1;
 end
 L = legend(ForLegend);

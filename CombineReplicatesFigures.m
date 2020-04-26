@@ -6,6 +6,7 @@
 %DynamicsResultsPath = 'S:\Simon\Dropbox\DynamicsResults';
 DynamicsResultsPath = '/Users/simon_alamos/Dropbox/DynamicsResults';
 CodeRepoPath = '/Users/simon_alamos/Documents/MATLAB/PlantPP7';
+RTqPCR_Data_path = '/Users/simon_alamos/Dropbox/PlantPP7_data_for_figures/RTqPCR_raw_data';
 
 
 % a list of prefixes I want to combine into a single figure
@@ -19,6 +20,12 @@ HSP101Prefixes = {'2019-02-16-12R-HSP101_HS_7','2019-02-16-12R-HSP101_HS_5','201
     %'2018-10-23-AL12R-HSP101-3_HS'};
 
 PulsePrefixes = {'2019-02-16-12R-HSP101_HS_RT_HS_4','2019-02-16-12R-HSP101-HS_RT_HS'};
+
+%for figures
+set(0,'defaulttextfontsize',14);
+set(0,'defaultaxesfontsize',14);
+set(0, 'defaultTextFontName', 'Arial')
+
 
 %% Run the latest version of the post analysis code here
 GoodPrefixes = [HsfA2Prefixes EF1alphaPrefixes HSP101Prefixes PulsePrefixes];
@@ -89,48 +96,48 @@ end
 
 % create a folder to store the analysis figures and .mat files.
 %% Plot all experiments in one figure
-
-%mean integrated spot fluorescence across all cells
-plotAllPrefixes(DatasetsStruct,'MeanAccumulatedFluoAll')
-%mean spot fluorescence as a function of time for all cells
-plotAllPrefixes(DatasetsStruct,'MeanFluoAll')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(DatasetsStruct,'MeanFluoOn')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(DatasetsStruct,'InstFractionON')
-
+FieldsToPlot = {'MeanAccumulatedFluoAll','MeanFluoAll','MeanFluoOn','InstFractionON'};
+for f = 1:length(FieldsToPlot)
+    plotAllPrefixes(DatasetsStruct,FieldsToPlot{f});
+end
 
 %% line up datasets in time and look at results again
-%[DatasetsStruct(:).shiftedBefore] = deal(0); %here we keep track of wether they have been shifted or not already
 alignedDatasetsStruct = DatasetsStruct;
 alignedDatasetsStruct = findshifts(alignedDatasetsStruct);
 
-% first find which is the first time point after having
-% aligned everything
-% fun = @(x) x(1);
-% t0 =  max(cellfun(fun,cellfun(@find,{alignedDatasetsStruct.MeanFluoOn},'UniformOutput',false)));
+FieldsToPlot = {'MeanAccumulatedFluoAll','MeanFluoAll','MeanFluoOn','InstFractionON'};
+for f = 1:length(FieldsToPlot)
+    plotAllPrefixes(alignedDatasetsStruct,FieldsToPlot{f});
+end
 
-%mean integrated spot fluorescence across all cells
-plotAllPrefixes(alignedDatasetsStruct,'MeanAccumulatedFluoAll')
-%mean spot fluorescence as a function of time for all cells
-plotAllPrefixes(alignedDatasetsStruct,'MeanFluoAll')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(alignedDatasetsStruct,'MeanFluoOn')
-%mean spot fluorescence as a function of time for active cells only
-plotAllPrefixes(alignedDatasetsStruct,'InstFractionON')
 
 %% Calculate the mean accumulated mRNA based in integrated spot fluorescence
 % we will assume no degradation and an arbitrary degradation rate.
 % also, with and without normalization to t=60
 
 samplingTimes = [0,5,10,15,30,60]; %in minutes, for interpolation in MeanAccumulatedmRNA function
-GammaVals = logspace(-3,-1,6); %degradation rate of mRNA in mRNAs/frame or /min. log(2)/gamma = half life in minutes
+GammaVals = logspace(-4,-1,6); %degradation rate of mRNA in mRNAs/frame or /min. log(2)/gamma = half life in minutes
 
 %figure without normalization, show several degradation rates
-plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingTimes)
+AccmRNA_Data = plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingTimes);
 
 %figure with normalization, show several degradation rates
-plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingTimes,60)
+AccmRNA_normData = plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingTimes,60);
+
+
+%% Compare integrated mRNA from microscopy with RT-qPCR data
+
+% first, take a look at the RT-qPCR results.
+deltaCT_results_path = [RTqPCR_Data_path '/qPCR_deltaCTs.mat'];
+plotRTqPCRResults(deltaCT_results_path)
+
+
+
+
+
+
+
+
 
 
 %% Means across replicates of: Instantaneous fraction on, spot fluo across all cells and
@@ -163,7 +170,7 @@ for p = 1:length(Prefixes)
     FractionOnFile = dir([SingleTracesPath '\' '*FractionOn.mat']);
     FileName = FractionOnFile(1).name;
     FilePath = [SingleTracesPath '\'];
-    FractionON = struct2cell(load(fullfile(FilePath,FileName)))
+    FractionON = struct2cell(load(fullfile(FilePath,FileName)));
     ReplicatesFractionCompetent(p) = nanmax(cell2mat(FractionON));
 end
 
