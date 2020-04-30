@@ -1,6 +1,12 @@
 function ReplicatesData = plotMeanAccumulatedmRNA(DataStruct,GammaVals,samplingTimes,normalizationTime)
 
-%creates a figure showing the mean and standard error in the accumulated
+% returns the REPLICATESDATA array with the acumulated mRNA as infered from
+% integrated spot fluorescence and a simulated degradation rate:
+% first dim = replicates specified by the rows in DATASTRUCT
+% second dim = time (specified by SAMPLINGTIMES argument), 
+% third dim = simulated degradation rates specified by GAMMAVALS
+
+%it also creates a figure showing the mean and standard error in the accumulated
 %mRNA as calculated from integrated spot fluorescence and a simulated
 %degradation rate.
 

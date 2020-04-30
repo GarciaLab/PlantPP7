@@ -5,7 +5,7 @@ for i = 1:length(varargin)
     
     for j = 1:length(Prefixes)
         PrefixName = Prefixes{j};
-        SingleTracesPath = [DynamicsResultsPath '/' PrefixName '/' ['ResultsFigures_' PrefixName]]
+        SingleTracesPath = [DynamicsResultsPath '/' PrefixName '/' ['ResultsFigures_' PrefixName]];
         
         MatFileName = [varargin{i} '.mat'];
         load(fullfile(SingleTracesPath,MatFileName));

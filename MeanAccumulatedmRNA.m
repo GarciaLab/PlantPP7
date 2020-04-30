@@ -38,11 +38,9 @@ for p = 1:length(Struct)
         AccuFluoDeg = [AccuFluoDeg nansum([mRNApreviousStep;Degradation;Production])]; %append the simulation results to a growing vector
     end
 
-    % to get the mean across the simulated accumulated mRNA we will first
-    % interpolate
+    % to get the mean across the simulated accumulated mRNA we will first interpolate
     interpPoints = 500; %number of elements in the interpolated vector
     interpVector = linspace(0,ceil(max(Time)),interpPoints);
-    %interpAccFluo = interp1(Time,AccuFluo,interpVector);
     interpAccFluoDeg = interp1(Time,AccuFluoDeg,interpVector);
     
     for t = 1:length(samplingTimes)

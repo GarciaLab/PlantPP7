@@ -1,4 +1,4 @@
-function plotRTqPCRResults(path);
+function OutputData = plotRTqPCRResults(path);
 
 load(path)
 
@@ -110,50 +110,6 @@ title('mRNA abundance, transgene vs endogenous HSP101 - normalized to t=60min')
 Limits = xlim;
 ylim(Limits)
 
-
-
-
-
-
-%%
-% 
-% 
-% 
-% 
-% 
-% 
-% figure
-% Mean_YHSP101_60_All = mean([YHSP101_means_3(end),YHSP101_means_4(end),YHSP101_means_5(end)]);
-% Mean_PP7_60_All = mean([PP7LUC_means_3(end),PP7LUC_means_4(end),PP7LUC_means_5(end)]);
-% 
-% YHSP101_means_3_Norm = YHSP101_means_3./Mean_YHSP101_60_All;
-% YHSP101_means_4_Norm = YHSP101_means_4./Mean_YHSP101_60_All;
-% YHSP101_means_5_Norm = YHSP101_means_5./Mean_YHSP101_60_All;
-% 
-% PP7LUC_means_3_Norm = PP7LUC_means_3./Mean_PP7_60_All;
-% PP7LUC_means_4_Norm = PP7LUC_means_4./Mean_PP7_60_All;
-% PP7LUC_means_5_Norm = PP7LUC_means_5./Mean_PP7_60_All;
-% 
-% YHSP101_means_All_Norm = mean([YHSP101_means_3_Norm,YHSP101_means_4_Norm,YHSP101_means_5_Norm],2);
-% YHSP101_SE_All_Norm = std([YHSP101_means_3_Norm,YHSP101_means_4_Norm,YHSP101_means_5_Norm],[],2)./sqrt(3);
-% 
-% 
-% PP7_means_All_Norm = mean([PP7LUC_means_3_Norm,PP7LUC_means_4_Norm,PP7LUC_means_5_Norm],2);
-% PP7_SE_All_Norm = std([PP7LUC_means_3_Norm,PP7LUC_means_4_Norm,PP7LUC_means_5_Norm],[],2)./sqrt(3);
-% 
-% [Fit,~] = polyfit(PP7_means_All_Norm,YHSP101_means_All_Norm,1);
-% fittedY = polyval(Fit,[PP7_means_All_Norm' 1.4]);
-% 
-% 
-% %HSP101 on the x, PP7 on the y
-% errorbar(PP7_means_All_Norm,YHSP101_means_All_Norm,PP7_SE_All_Norm,'r.','CapSize',0,'LineWidth',2)
-% hold on
-% errorbar(PP7_means_All_Norm,YHSP101_means_All_Norm,YHSP101_SE_All_Norm,'b.','horizontal','CapSize',0,'LineWidth',2)
-% plot(PP7_means_All_Norm,YHSP101_means_All_Norm,'ko','MarkerSize',8,'MarkerFaceColor','w')
-% plot([PP7_means_All_Norm' 1.4],fittedY,'k-')
-% hold off
-% xlabel('endogenous HSP101 mRNA abundance (normalized to t=0)')
-% ylabel('LUC mRNA abundance (normalized to t=0)')
-% legend('mean and SEM reporter','mean and SEM endogenous','',['fit =' num2str(Fit(1))])
-
+%% function output
+OutputData = norm_PP7LUC_means';
 end
