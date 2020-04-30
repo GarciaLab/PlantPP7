@@ -159,29 +159,50 @@ PolPerAU = 1/AUperPol;
 
 %% Detection threshold
 
+clearvars -except alignedDatasetsStruct DatasetsStruct Prefixes DynamicsResultsPath CodeRepoPath PolPerAU
+
 [Errors,Fluos] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct)
 
-figure
-hold on
-histogram(log(Errors),'BinWidth',.4,'Normalization','probability')
-histogram(log(Fluos),'BinWidth',.4,'Normalization','probability')
-hold off
+% express everything in terms of polymerases
+Fluos = Fluos.*PolPerAU;
+Errors = Errors.*PolPerAU;
 
 figure
 hold on
-scatter(log(Fluos),log(Errors),200,'b','filled','MarkerFaceAlpha',0.15)
-plot(log(Fluos),log(Fluos),'k-')
+histogram(log(Errors),'BinWidth',.3,'Normalization','probability')
+histogram(log(Fluos),'BinWidth',.3,'Normalization','probability')
+hold off
+xlabel('ln(signal (number of RNAP))')
+
+figure
+hold on
+scatter(log(Fluos),log(Errors),200,'b','filled','MarkerFaceAlpha',0.15) % data
+%fit data to line
+goodpoints = Errors>1;
+P = polyfit(log(Fluos(goodpoints)),log(Errors(goodpoints)),1);
+fittedY = polyval(P,[0 log(Fluos(goodpoints))]);
+plot([0 log(Fluos(goodpoints))],fittedY,'r')
+plot([0 log([Fluos])],[0 log([Fluos])],'k-') % y =x
 hold off
 ylabel('error')
 xlabel('signal')
 
+
+
+
+
 figure
-SNR = Fluos./Errors
+SNR = Fluos./Errors;
 SNR(SNR==Inf) = nan;
 errorbar(nanmean(SNR),nanstd(SNR),'ko','LineWidth',2)
 
 figure
-plot(log(Fluos),log(SNR),'o')
+histogram(log(SNR))
+
+figure
+scatter(log(Fluos),log(SNR),200,'b','filled','MarkerFaceAlpha',0.15)
+xlabel('ln(number of RNAP)')
+ylabel('ln(SNR)')
 
 
 %% Means across replicates of: Instantaneous fraction on, spot fluo (across all and active only)
