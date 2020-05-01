@@ -166,9 +166,9 @@ PolPerAU = 1/AUperPol;
 %% Detection threshold
 
 clearvars -except alignedDatasetsStruct DatasetsStruct Prefixes DynamicsResultsPath CodeRepoPath PolPerAU
-
-[Errors,Fluos] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct);
-length(Fluos)
+% 
+% [Errors,Fluos] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct);
+% length(Fluos)
 
 [MeanFluos,MeanOfDimmest,Error] = FluoErrorDimmestSpots2(DynamicsResultsPath,alignedDatasetsStruct,PolPerAU);
 
