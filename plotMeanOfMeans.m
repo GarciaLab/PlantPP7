@@ -48,7 +48,8 @@ figure
 
 if contains(Field,'Fluo')
     yyaxis left
-    errorbar(TimeForPlot,Mean,SE);
+    shadedErrorBar(TimeForPlot,Mean,SE,'lineProps',{'Color','b','LineWidth',2})
+    %errorbar(TimeForPlot,Mean,SE);
     ylim([0 nanmax(Mean)*1.2])
     ylabel('spot fluorescence')
     
@@ -59,11 +60,14 @@ if contains(Field,'Fluo')
     
     title(Field)
     xlabel('time since spot detection (min)')
+    xlim([0 60])
 
 else
     errorbar(TimeForPlot,Mean,SE);
+    shadedErrorBar(TimeForPlot,Mean,SE,'lineProps',{'Color','b','LineWidth',2})
     title(Field)
     xlabel('time since spot detection (min)')
+    xlim([0 60])
 
 
 end

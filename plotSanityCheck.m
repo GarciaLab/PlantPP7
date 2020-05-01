@@ -7,7 +7,7 @@ function plotSanityCheck(Struct,Field1,Field2,Field3)
 Field1All = plotAllPrefixes(Struct,Field1); 
 Field2All = plotAllPrefixes(Struct,Field2); 
 Field3All = plotAllPrefixes(Struct,Field3);
-close all %close the figures that the plotAllPrefixes function generates
+%close all %close the figures that the plotAllPrefixes function generates
 
 figure
 Expectation = Field1All.*Field2All;

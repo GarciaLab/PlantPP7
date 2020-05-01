@@ -1,11 +1,11 @@
-function DynamicRanges = plotDynamicRange(Struct,Field,t1,t2)
+function DynamicRanges = plotSingleDynamicRange(Struct,Field,t1,t2,PolPerAU)
 
 % returns the ratio of the value in the field FIELD of the struct STRUCT at
 % timepoints t2 vs t1.
 % output is a 1 x r array called DYNAMICRANGES where r is the
 % number of replicates.
 
-AllDataArray = plotMeanOfMeans(Struct,Field);
+AllDataArray = plotMeanOfMeans(Struct,Field,PolPerAU);
 %close all % I think this function generates a figure
 
 

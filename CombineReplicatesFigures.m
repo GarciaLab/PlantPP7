@@ -21,6 +21,12 @@ HSP101Prefixes = {'2019-02-16-12R-HSP101_HS_7','2019-02-16-12R-HSP101_HS_5','201
 
 PulsePrefixes = {'2019-02-16-12R-HSP101_HS_RT_HS_4','2019-02-16-12R-HSP101-HS_RT_HS'};
 
+Snapshot2SpotsHSP101Prefixes = {'2020-01-20-AL13Rb-HSP101_9-1-A','2020-01-20-AL13Rb-HSP101_9-1-D',...
+    '2020-01-20-AL13Rb-HSP101_9-1-Dc'};
+
+Snapshot2SpotsHsfA2Prefixes = {'2020-01-22-AL13Rb-HsfA2_new-22-1a','2020-01-22-AL13Rb-HsfA2_new-22-1b'};
+
+
 %for figures
 set(0,'defaulttextfontsize',14);
 set(0,'defaultaxesfontsize',14);
@@ -161,49 +167,10 @@ PolPerAU = 1/AUperPol;
 
 clearvars -except alignedDatasetsStruct DatasetsStruct Prefixes DynamicsResultsPath CodeRepoPath PolPerAU
 
-[Errors,Fluos] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct)
+[Errors,Fluos] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct);
+length(Fluos)
 
-% express everything in terms of polymerases
-Fluos = Fluos.*PolPerAU;
-Errors = Errors.*PolPerAU;
-
-figure
-hold on
-histogram(log(Errors),'BinWidth',.3,'Normalization','probability')
-histogram(log(Fluos),'BinWidth',.3,'Normalization','probability')
-hold off
-xlabel('ln(signal (number of RNAP))')
-
-figure
-hold on
-scatter(log(Fluos),log(Errors),200,'b','filled','MarkerFaceAlpha',0.15) % data
-%fit data to line
-goodpoints = Errors>1;
-P = polyfit(log(Fluos(goodpoints)),log(Errors(goodpoints)),1);
-fittedY = polyval(P,[0 log(Fluos(goodpoints))]);
-plot([0 log(Fluos(goodpoints))],fittedY,'r')
-plot([0 log([Fluos])],[0 log([Fluos])],'k-') % y =x
-hold off
-ylabel('error')
-xlabel('signal')
-
-
-
-
-
-figure
-SNR = Fluos./Errors;
-SNR(SNR==Inf) = nan;
-errorbar(nanmean(SNR),nanstd(SNR),'ko','LineWidth',2)
-
-figure
-histogram(log(SNR))
-
-figure
-scatter(log(Fluos),log(SNR),200,'b','filled','MarkerFaceAlpha',0.15)
-xlabel('ln(number of RNAP)')
-ylabel('ln(SNR)')
-
+[MeanFluos,MeanOfDimmest,Error] = FluoErrorDimmestSpots2(DynamicsResultsPath,alignedDatasetsStruct,PolPerAU);
 
 %% Means across replicates of: Instantaneous fraction on, spot fluo (across all and active only)
 % keep around in the workspace only the variable we're going to use
@@ -231,21 +198,49 @@ plotFractionCompetent(alignedDatasetsStruct)
 %% Decomposing the dynamic range in the mean fluorescence across cells into:
 % the mean fluorescence across active cells and the instantaneous fraction
 % of active cells
-
 % by dynamic range we mean the ratio between F(t=1) and F(t>1) where F(t)
-% is going to be different metrics of activity
-T1 = 10; % the first time point for HSP101 replicates
-T2 = 36; % the second time point for HSP101 replicates
+% is going to be the three different metrics of activity
+T1 =8; % the first time point for 12R-HSP101-3 replicates
+T2 = 39; % the second time point for 12R-HSP101-3 replicates
+% T1 = 8; % the first time point for 13Rb-HsfA2-F replicates
+% T2 = 15; % the second time point for 13Rb-HsfA2-F replicates
 
-% T1 = 8; % the first time point for HsfA2 replicates
-% T2 = 15; % the second time point for HsfA2 replicates
+DRFraction = plotSingleDynamicRange(alignedDatasetsStruct,'InstFractionON',T1,T2,PolPerAU);
+DRmeanFOn = plotSingleDynamicRange(alignedDatasetsStruct,'MeanFluoOn',T1,T2,PolPerAU);
+DRmeanFAll = plotSingleDynamicRange(alignedDatasetsStruct,'MeanFluoAll',T1,T2,PolPerAU);
 
-Out = plotDynamicRange(alignedDatasetsStruct,'InstFractionON',T1,T2);
-Out = plotDynamicRange(alignedDatasetsStruct,'MeanFluoOn',T1,T2);
-Out = plotDynamicRange(alignedDatasetsStruct,'MeanFluoAll',T1,T2);
+close all
+plotDynamicRanges(DRFraction,DRmeanFOn,DRmeanFAll)
+
+%% Single traces variability and behavior
 
 
-%%
+
+
+
+
+
+
+
+
+
+
+%% Two spot snapshots
+
+
+
+
+
+
+
+
+%% Deprecated
+
+
+
+
+
+
 
 
 
