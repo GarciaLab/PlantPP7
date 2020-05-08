@@ -166,11 +166,8 @@ PolPerAU = 1/AUperPol;
 %% Detection threshold
 
 clearvars -except alignedDatasetsStruct DatasetsStruct Prefixes DynamicsResultsPath CodeRepoPath PolPerAU
-% 
-% [Errors,Fluos] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct);
-% length(Fluos)
 
-[MeanFluos,MeanOfDimmest,Error] = FluoErrorDimmestSpots2(DynamicsResultsPath,alignedDatasetsStruct,PolPerAU);
+[MeanFluos,MeanOfDimmest,Error] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct,PolPerAU);
 
 %% Means across replicates of: Instantaneous fraction on, spot fluo (across all and active only)
 % keep around in the workspace only the variable we're going to use
@@ -214,18 +211,14 @@ plotDynamicRanges(DRFraction,DRmeanFOn,DRmeanFAll)
 
 %% Single traces variability and behavior
 
-
-
-
-
-
-
-
-
-
-
+peakTime = 50; %we'll show the fluorescence distribution of all particles in this timepoint
+particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'derivative')
+particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'fluorescence')
+particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'AllParticles',peakTime)
+%xlim([10^-1.4 10^1.1])
 
 %% Two spot snapshots
+
 
 
 
