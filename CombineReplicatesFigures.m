@@ -21,11 +21,12 @@ HSP101Prefixes = {'2019-02-16-12R-HSP101_HS_7','2019-02-16-12R-HSP101_HS_5','201
 
 PulsePrefixes = {'2019-02-16-12R-HSP101_HS_RT_HS_4','2019-02-16-12R-HSP101-HS_RT_HS'};
 
-Snapshot2SpotsHSP101Prefixes = {'2020-01-20-AL13Rb-HSP101_9-1-A','2020-01-20-AL13Rb-HSP101_9-1-D',...
-    '2020-01-20-AL13Rb-HSP101_9-1-Dc'};
-
+Snapshot2SpotsHSP101Prefixes = {'2020-01-20-AL13Rb-HSP101_9-1-A','2020-01-20-AL13Rb-HSP101_9-1-D'};
+%'2020-01-20-AL13Rb-HSP101_9-1-Dc'
 Snapshot2SpotsHsfA2Prefixes = {'2020-01-22-AL13Rb-HsfA2_new-22-1a','2020-01-22-AL13Rb-HsfA2_new-22-1b'};
 
+TwoSpotMovies = {'2020-03-11-AL13Rb-HsfA2_new_11.1_stepHS','2020-03-06-13Rb-HSP101-9.4_rep2',...
+    '2020-03-06-13Rb-HSP101-9.4','2019-02-16-12R-HSP101_HS_RT_HS_4'};
 
 %for figures
 set(0,'defaulttextfontsize',14);
@@ -36,19 +37,20 @@ set(0, 'defaultTextFontName', 'Arial')
 %% Run the latest version of the post analysis code here
 % GoodPrefixes = [HsfA2Prefixes EF1alphaPrefixes HSP101Prefixes PulsePrefixes];
 % GoodPrefixes = HSP101Prefixes;
+% GoodPrefixes = HsfA2Prefixes;
 % 
-% 
-% tic %to time how long this takes
-% for p = 1:length(GoodPrefixes)    
-%     PrefixName = GoodPrefixes{p};
-%     SingleLiveExperimentPlots(PrefixName);
-%     %SpatialClustering(PrefixName);
-% end
-% toc
+tic %to time how long this takes
+for p = 1%:length(GoodPrefixes)    
+    PrefixName = GoodPrefixes{p};
+    SingleLiveExperimentPlots(PrefixName);
+    %SpatialClustering(PrefixName);
+end
+toc
 
 
 %% Pick a group of prefixes and intialize a struct to store everything about each replicate
 Prefixes = HSP101Prefixes;
+Prefixes = HsfA2Prefixes;
 for p = 1:length(Prefixes)
     DatasetsStruct(p).Prefix = Prefixes{p};
 end

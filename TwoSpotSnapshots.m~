@@ -8,45 +8,131 @@ DynamicsResultsPath = '/Users/simon_alamos/Dropbox/DynamicsResults';
 PrefixPath = [DynamicsResultsPath '/' Prefix];
 
 NuclearMaskPath = [PrefixPath '/FilledFilteredMask.mat'];
-load(NuclearMaskPath)
-
+try
+    load(NuclearMaskPath)
+catch
+end
+    
 load([PrefixPath '/' 'CompiledParticles.mat'],'CompiledParticles')
-CompiledParticles = CompiledParticles{1};
+%in some versions of the code CompiledParticles can be a struct within a cell
+if iscell(CompiledParticles) 
+    CompiledParticles = CompiledParticles{1};
+end
+
 load([PrefixPath '/' 'Spots.mat'])
-load([PrefixPath '/' 'Particles.mat'])
+load([PrefixPath '/' 'Particles.mat'],'Particles')
+load([PrefixPath '/' 'FrameInfo.mat'])
+load([PrefixPath '/' 'FrameInfo.mat'])
+
+try
+load([PrefixPath '/' 'Ellipses.mat'])
+catch
+end
+%% In the case of time lapse movies run this part only
+
+[NucleiPerFrame, CompiledParticles] = ...
+    assignParticlesToEllipses(Ellipses,CompiledParticles,FrameInfo);
+
+figure
+hold on
+for frame = 1:length(NucleiPerFrame)
+    Nuclei = NucleiPerFrame(frame).Nuclei;
+    ParticlesPerNucleus = countSpotsPerNucleus(Nuclei,10);
+    [~, FractionOneSpot, ~, FractionTwoSpots,~, ~,TotalNuclei] = ...
+        NumberOfSpotsFractions (ParticlesPerNucleus);
+    MultinomialTestOfTwoSpots_norm(FractionOneSpot,FractionTwoSpots,ceil(TotalNuclei*0.5),0)
+end
+hold off
+title(Prefix)
+savefig([PrefixPath 'Spots_time.fig'])
+
+DataOneSpot =[];
+DataTwoSpots = [];
+ExpectedOneSpot = [];
+ExpectedTwoSpot = [];
+ExpectedErrorOneSpot = [];
+ExpectedErrorTwoSpot = [];
+
+for frame = 1:length(NucleiPerFrame)
+    
+    Nuclei = NucleiPerFrame(frame).Nuclei;
+    ParticlesPerNucleus = countSpotsPerNucleus(Nuclei,10);
+    [~, FractionOneSpot, ~, FractionTwoSpots,~, ~,TotalNuclei] = ...
+        NumberOfSpotsFractions (ParticlesPerNucleus);
+    
+    DataOneSpot(frame) = FractionOneSpot*TotalNuclei;
+    DataTwoSpots(frame) = FractionTwoSpots*TotalNuclei;
+    
+    [ExpectedOneSpot(frame),ExpectedTwoSpot(frame),...
+        ExpectedErrorOneSpot(frame),ExpectedErrorTwoSpot(frame)] = ...
+    MultinomialTestOfTwoSpots_time(FractionOneSpot,FractionTwoSpots,TotalNuclei,frame)
+end
+
+
+AbsTime = [FrameInfo.Time]./60; %in minutes
+figure
+hold on
+shadedErrorBar(AbsTime,ExpectedOneSpot,ExpectedErrorOneSpot,'lineProps',...
+    {'Color','b','LineWidth',2,'LineStyle','--'})
+plot(AbsTime,DataOneSpot,'b-','LineWidth',2,'MarkerFaceColor','b')
+title(['One Spot ' Prefix],'interpreter','none')
+hold off
+savefig([PrefixPath 'OneSpot_time.fig'])
+ylim([0 max(ExpectedOneSpot+ExpectedErrorOneSpot)*1.2])
+
+
+figure
+hold on
+shadedErrorBar(AbsTime,ExpectedTwoSpot,ExpectedErrorTwoSpot,'lineProps',...
+    {'Color','r','LineWidth',2,'LineStyle','--'})
+plot(AbsTime,DataTwoSpots,'r-','LineWidth',2,'MarkerFaceColor','r')
+title(['Two Spot ' Prefix],'interpreter','none')
+hold off
+savefig([PrefixPath '/TwoSpots_time.fig'])
+ylim([0 max(DataTwoSpots)*1.2])
 
 %% flag overlapping particles so that we don't count them twice
 Particles = disapproveOverlappingParticles(Particles,Spots);
 
 %% Assign particles to nuclei from scratch
-Nuclei = assignParticlesToNuclei (Nuclei,FilledFilteredMask,CompiledParticles);
+% this script uses CompiledParticles, make sure to recompile after
+% disapproving overlapping ones
+% CompiledParticles = CompileParticles(Prefix);
+Nuclei = assignParticlesToNuclei (FilledFilteredMask,CompiledParticles);
 
 %% Particles per nucleus: analysis of results
-
 AreaThreshold = 6000; % maximum number of pixels squared for a nucleus to be considered
 % nuclei larger than this are polyploid
 % now make a vector containing the number of spots per nucleus
 ParticlesPerNucleus = countSpotsPerNucleus(Nuclei,AreaThreshold);
-[N,~] = histcounts(ParticlesPerNucleus);
-sum(N) is total nuclei, N(1) is nuclei with 0 spots, N(2) is nuclei with one, N(3) have two and
-sum(N(3:end)) is two or more.
 
-FractionOne = N(2)/sum(N);
-FractionOneOrTwo = (N(2)+N(3))/sum(N);
-FractionTwo = N(3)/sum(N);
-FractionTwoOrMore = (sum(N)-N(1)-N(2))/sum(N);
-FractionActive = (sum(N)-N(1))/sum(N);
+[FractionZeroSpots, FractionOneSpot, FractionOneOrTwoSpots, FractionTwoSpots,...
+    FractionTwoOrMoreSpots, FractionActiveNuclei,TotalNuclei] = NumberOfSpotsFractions (ParticlesPerNucleus);
+close all
+MultinomialTestOfTwoSpots_norm(FractionOneSpot,FractionTwoSpots,63,1)
 
-%P is the probability that a single locus will turn on
-% predict P based on the fraction off
-p1 = 1-sqrt(OffNuclei/TotalNuclei);
-% predict P based on the fraction with one or more spots
-p2 = 1-sqrt(1-FractionOneOrTwo);
+
+
+%%
+
+
+% P = probability of single locus turning on
+
+% calculate P based on the fraction off, under assumption of independence
+% the expected probability that both are off is (1-P)^2, solving for P
+% using the measured  fraction of cells with both loci off:
+PfromPoff = 1-sqrt(FractionZeroSpots); 
+
+% calculate P based on the fraction with one or two, under assumption of independence
+% the expected probability that both are off is (1-P)^2, solving for P
+% using the measured  fraction of cells with both loci off:
+PfromOneOrTwo = 1-sqrt(1-FractionOneOrTwoSpots);
+
 % now predict the fraction with two spots, will take the average of the two
 % predictions
-PredictedTwoSpots = (mean([p1 p2]))^2;
+PredictedTwoSpots = (mean([PfromPoff PfromOneOrTwo]))^2;
 % prediction of one spot
-PredictedOneSpot = 2*mean([p1 p2])*(1-mean([p1 p2]));
+PredictedOneSpot = 2*mean([PfromPoff PfromOneOrTwo])*(1-mean([PfromPoff PfromOneOrTwo]));
 
 nSamples = 10000;
 % bootstrapping the onserved fraction of off nuclei

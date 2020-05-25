@@ -1,4 +1,4 @@
-function Nuclei = assignParticlesToNuclei (Nuclei,Mask,CompiledParticles)
+function Nuclei = assignParticlesToNuclei (Mask,CompiledParticles)
 
 
 % create a struct called 'Nuclei' to store the spots associated to each
@@ -38,17 +38,17 @@ for p = 1:length(CompiledParticles)
     Nuclei(Idx).AssociatedParticles1(length(Nuclei(Idx).AssociatedParticles1)+1) = p;
     
     %METHOD 2: assign particles based on overlap with nucleus area region
-    if DilatedNucleusLabels(particleYPos,particleXPos) %if the particle overlaps with a nucleus area
-        Nuclei(DilatedNucleusLabels(particleYPos,particleXPos)).AssociatedParticles2(length(Nuclei(Idx).AssociatedParticles2)+1) = p;
-    else %find the closest nucleus area if the particle doesn't overlap with a nucleus
-        %failcount = failcount+1;
-        % select a square around the unassigned particle
-        NearPixels = DilatedNucleusLabels(max(particleYPos-40,0):min(particleYPos+40,size(NucleusLabels,1)),...
-            max(particleXPos-40,0):min(particleXPos+40,size(NucleusLabels,2)));
-        [~,IDX] = bwdist(NearPixels); % for each pixel, calculate the distance to the closest nonzero pixel and its position
-        NucleusID = NearPixels(IDX(40,40)); % 40,40 is the position of the particle in this square
-        Nuclei(NucleusID).AssociatedParticles2(length(Nuclei(Idx).AssociatedParticles2)+1) = p;
-    end       
+%     if DilatedNucleusLabels(particleYPos,particleXPos) %if the particle overlaps with a nucleus area
+%         Nuclei(DilatedNucleusLabels(particleYPos,particleXPos)).AssociatedParticles2(length(Nuclei(Idx).AssociatedParticles2)+1) = p;
+%     else %find the closest nucleus area if the particle doesn't overlap with a nucleus
+%         %failcount = failcount+1;
+%         % select a square around the unassigned particle
+%         NearPixels = DilatedNucleusLabels(max(particleYPos-40,0):min(particleYPos+40,size(NucleusLabels,1)),...
+%             max(particleXPos-40,0):min(particleXPos+40,size(NucleusLabels,2)));
+%         [~,IDX] = bwdist(NearPixels); % for each pixel, calculate the distance to the closest nonzero pixel and its position
+%         NucleusID = NearPixels(IDX(40,40)); % 40,40 is the position of the particle in this square
+%         Nuclei(NucleusID).AssociatedParticles2(length(Nuclei(Idx).AssociatedParticles2)+1) = p;
+%     end       
     
 end
 
@@ -70,10 +70,10 @@ end
 % save('Nuclei','Nuclei')
 % save('DilatedNucleusLabels','DilatedNucleusLabels')
 
-try
-figure
-scatter([Nuclei.AssociatedParticles1],[Nuclei.AssociatedParticles2],'ko')
-catch
-end
+% try
+% figure
+% scatter([Nuclei.AssociatedParticles1],[Nuclei.AssociatedParticles2],'ko')
+% catch
+% end
 
 end

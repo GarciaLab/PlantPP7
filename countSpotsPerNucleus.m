@@ -5,18 +5,22 @@ function ParticlesPerNucleus = countSpotsPerNucleus(Nuclei,AreaThreshold)
 
 ParticlesPerNucleus = nan(1,length(Nuclei));
 
-nucleicounter = 0;
+nucleicounter = 1;
 
-for n = 1:length(Nuclei)
-    NucleusParticles = Nuclei(n).AssociatedParticles2;
+for n = 17:length(Nuclei)
+    NucleusParticles = Nuclei(n).AssociatedParticles1;
     NucleusArea = Nuclei(n).Area;
     
     if NucleusArea < AreaThreshold
-        nucleicounter = nucleicounter+1;
-        if isempty(NucleusParticles)
-            ParticlesPerNucleus(n) = length(NucleusParticles);
+        if ~isempty(NucleusParticles)
+            ParticlesPerNucleus(nucleicounter) = length(NucleusParticles);
         else
-            ParticlesPerNucleus(n) = 0;
+            ParticlesPerNucleus(nucleicounter) = 0;
         end
+        nucleicounter = nucleicounter+1;
     end
 end
+% figure to visualize output
+%histogram(ParticlesPerNucleus)
+end
+
