@@ -110,6 +110,31 @@ title('mRNA abundance, transgene vs endogenous HSP101 - normalized to t=60min')
 Limits = xlim;
 ylim(Limits)
 
+%% fit reporter mRNA abundance (mean across reps) to mRNA prodution-synthesis model
+Xdata = [0 5 10 15 30 60];
+Ydata = PP7LUC_means_all;
+% the function: the solution to dM/dt = r - gamma*M which is
+% M(t) = r/gamma + c * e^(-C*t) where C is a constant determined by the
+% initial number of mRNAs. if the initial number is 0 then c = -r/gamma
+
+mRNAfun = @(z) (((-z(1)/z(2)) * exp(-z(1)*Xdata)) + (z(1)/z(2))) - Ydata;
+% z(1) is the transcription rate r, z(2) is the degradation rate gamma
+
+z0 = [0.01,0.000000001]; %initial guesses
+lb = [0.02,0.000001]; % lower bounds
+ub = [0.1,0.006]; % define upper bounds for each parameter, note that I'm forcing the baseline to be 0
+Guess = lsqnonlin(mRNAfun,z0,lb,ub); %fit by minizing the subtraction between actual Y data and the fit
+moreContinuousXData = linspace(min(Xdata),max(Xdata)*1.2,100);
+FittedResult = (-Guess(1)/Guess(2))*exp(-Guess(2)*moreContinuousXData) + (Guess(1)/Guess(2));
+plot(moreContinuousXData,FittedResult,'b','LineWidth',2);
+hold on
+%plot(Xdata,PP7LUC_means_all,'ro')
+errorbar(time,PP7LUC_means_all,PP7LUC_SE_all,'ro','LineWidth',2,'CapSize',0)
+mRNALifeTime = log(2)/Guess(2); %in minutes
+legend(['r =' num2str(Guess(1)) '; \gamma =' num2str(Guess(2))])
+title(['mRNA lifetime = ' num2str(mRNALifeTime) 'min'])
+%hold off
+
 %% function output
 OutputData = norm_PP7LUC_means';
 end

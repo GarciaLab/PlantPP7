@@ -185,6 +185,11 @@ save([ResultsFiguresFolder '\AllParticles.mat'],'AllParticles')
 
 clear BlankFluo BlankError particleFluo particleError particleErrors particleOffset particleFrames...
     particleTimes MinFrames
+%% Make heatmap of all particles
+
+imagesc(AllParticles);
+
+
 
 %% Plot mean transcriptional activity per frame, for just active spots and for all.
 close all

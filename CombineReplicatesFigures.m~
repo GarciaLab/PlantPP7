@@ -103,7 +103,7 @@ for f = 1:length(FieldsToPlot)
 end
 
 
-%% MEAN ACCUMULATED mRNA BASED ON SPOT FLUO
+%% Calculate the mean accumulated mRNA based on integrated spot fluorescence
 % we will assume no degradation and an arbitrary degradation rate.
 % also, with and without normalization to t=60
 
@@ -117,7 +117,7 @@ AccmRNA_Data = plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingT
 FluoAccmRNA_normData = plotMeanAccumulatedmRNA(alignedDatasetsStruct,GammaVals,samplingTimes,60);
 
 
-%% CROSS COMPARING RT-qPCR WITH MICROSCOPY
+%% Compare integrated mRNA from microscopy with RT-qPCR data
 
 % first, take a look at the RT-qPCR results.
 deltaCT_results_path = [RTqPCR_Data_path '/qPCR_deltaCTs.mat'];
@@ -154,7 +154,7 @@ xlabel('reporter transgene mRNA half-life (minutes)')
 hold off
 set(gca,'xscale','log')
 
-%% ABSOLUTE CALIBRATION OF GFP USING NANOCAGES
+%% Absolute calibration of GFP fluorescence using nanocages
 
 Prefixes60mer = {'2019-06-15-G260G_UBC1-CER-60G_16H_5xpower_2','2019-06-15-G260G_UBC1-CER-60G_16H_5xpower_2_2','2019-06-15-G260G_UBC1-CER-60G_16H_5xpower_2_7',...
     '2019-06-15-G260G_UBC1-CER-60G_16H_5xpower_2_9'};
@@ -172,14 +172,13 @@ PP7perPol = 24; %each RNAP has one nascent RNA that has 24 pp7 loops
 AUperPol = AUperGFP * GFPperPCP * PCPperPP7 * PP7perPol;
 PolPerAU = 1/AUperPol;
 
-%% DETECTION THRESHOLD ESTIMATION
+%% Detection threshold
+
 clearvars -except alignedDatasetsStruct DatasetsStruct Prefixes DynamicsResultsPath CodeRepoPath PolPerAU
 
 [MeanFluos,MeanOfDimmest,Error] = FluoErrorDimmestSpots(DynamicsResultsPath,alignedDatasetsStruct,PolPerAU);
 
-%% MEAN ACROSS REPLICATES OF:
-% Instantaneous fraction on, spot fluo (across all and active only)
-
+%% Means across replicates of: Instantaneous fraction on, spot fluo (across all and active only)
 % keep around in the workspace only the variable we're going to use
 clearvars -except alignedDatasetsStruct DatasetsStruct Prefixes DynamicsResultsPath CodeRepoPath PolPerAU
 
@@ -195,13 +194,42 @@ end
  %all cells in frame t.
 plotSanityCheck(alignedDatasetsStruct,'InstFractionON','MeanFluoOn','MeanFluoAll')
 
-%% FRACTION COMPETENT
+% %%
+% detectionThresh = 10; %a.u
+% AllMeans = nan(length(alignedDatasetsStruct),80);
+% hold on
+% for rep = 1:length(alignedDatasetsStruct)
+%     AllParticles = alignedDatasetsStruct(rep).AllParticles;
+%     AbsTime = alignedDatasetsStruct(rep).AbsTime;
+%     AllParticles(AllParticles==0) = detectionThresh;
+%     AllParticles(isnan(AllParticles)) = detectionThresh;
+%     Mean = nanmean(AllParticles);
+%     alignedMean = Mean(length(Mean)+1-length(AbsTime):end);
+% 
+%     interpTime = linspace(0,ceil(max(AbsTime)),500);
+%     interpAlignedMean = interp1(AbsTime,alignedMean,interpTime);
+%     
+% 
+%     plot(interpTime,interpAlignedMean)
+%     %AllMeans(rep,1:length(Mean)) = Mean;
+%     
+%     for t = 1:length(interpTime)       
+%         roundTime = round(interpTime(t))+1;
+%         MeanFluo = interpAlignedMean(t);
+%         AllMeans(rep,roundTime) = MeanFluo;
+%     end
+%              
+% end
+% hold off
+%     
+
+%% Fraction competent:
 % this is the number of nuclei where a spot was detected in at least one
 % frame divided by the total number of nuclei.
 
 plotFractionCompetent(alignedDatasetsStruct)
 
-%% DECOMPOSING THE DYNAMIC RANGE IN THE MEAN FLUORESCENCE ACROSS ALL CELLS
+%% Decomposing the dynamic range in the mean fluorescence across cells into:
 % the mean fluorescence across active cells and the instantaneous fraction
 % of active cells
 % by dynamic range we mean the ratio between F(t=1) and F(t>1) where F(t)
@@ -218,7 +246,6 @@ DRmeanFAll = plotSingleDynamicRange(alignedDatasetsStruct,'MeanFluoAll',T1,T2,Po
 close all
 plotDynamicRanges(DRFraction,DRmeanFOn,DRmeanFAll)
 
-
 %% SINGLE TRACES VARIABILITY AND BEHAVIOR
 
 peakTime = 50; %we'll show the fluorescence distribution of all particles in this timepoint
@@ -228,13 +255,11 @@ particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'fluoresc
 particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'AllParticlesMean',[],PolPerAU)
 particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'Integral')
 
-
 %% JOYPLOT OF THE DISTRIBUTION OF INSTANTANEOUS PARTICLE FLUORESCENCE
 % now make a moving window and show the distribution of particle
 % fluorescence
 % 'AllParticlesPerTime' array contains all the particles from all replicates aligned
 %in time
-AllParticlesPerTime = makeAllParticlesPerTime(alignedDatasetsStruct);
 
 MaxParticleFluo = nanmax(AllParticlesPerTime(:));
 bins = 20;

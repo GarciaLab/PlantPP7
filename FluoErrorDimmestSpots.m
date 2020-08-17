@@ -50,27 +50,42 @@ DimOfDimmestError_RNAP = DimOfDimmestError .* PolPerAU;
 close all
 figure(2)
 hold on
-HErr = histogram(DimOfDimmestError_RNAP,'BinWidth',.55,'Normalization','probability','FaceColor','b',...
-    'EdgeColor','none','FaceAlpha',.15);
-HSign = histogram(DimOfDimmestSignal_RNAP,'BinWidth',.61,'Normalization','probability','FaceColor','g',...
-    'EdgeColor','none','FaceAlpha',.15);
+HErr = histogram(DimOfDimmestError_RNAP,'BinWidth',.6,'Normalization','probability','FaceColor','b',...
+    'EdgeColor','none')%,'FaceAlpha',.15);
+HSign = histogram(DimOfDimmestSignal_RNAP,'BinWidth',.7,'Normalization','probability','FaceColor','g',...
+    'EdgeColor','none')%,'FaceAlpha',.15);
 xlabel('number of RNAP')
 ylabel('frequency')
 
-splineRes = 0.1;
-xE = [HErr.BinEdges(1)-HErr.BinWidth/2 HErr.BinEdges(1:end-1)+HErr.BinWidth/2 HErr.BinEdges(end)];
-yE = [0 HErr.Values 0];
-xxE = xE(1):splineRes:xE(end);
-sE = spline(xE,yE,xxE);
-pE = pchip(xE,yE,xxE)
-plot(xxE,sE,'b','LineWidth',2)
+% % fit to splines
+% splineRes = 0.1;
+% xE = [HErr.BinEdges(1)-HErr.BinWidth/2 HErr.BinEdges(1:end-1)+HErr.BinWidth/2 HErr.BinEdges(end)];
+% yE = [0 HErr.Values 0];
+% xxE = xE(1):splineRes:xE(end);
+% sE = spline(xE,yE,xxE);
+% pE = pchip(xE,yE,xxE)
+% plot(xxE,sE,'b','LineWidth',2)
+% 
+% xS = [HSign.BinEdges(1)-HSign.BinWidth/2 HSign.BinEdges(1:end-1)+HSign.BinWidth/2 HSign.BinEdges(end)];
+% yS = [0 HSign.Values 0];
+% xxS = xS(1):splineRes:xS(end);
+% sS = spline(xS,yS,xxS);
+% pS = makima(xS,yS,xxS);
+% plot(xxS,sS,'g','LineWidth',2)
 
-xS = [HSign.BinEdges(1)-HSign.BinWidth/2 HSign.BinEdges(1:end-1)+HSign.BinWidth/2 HSign.BinEdges(end)];
-yS = [0 HSign.Values 0];
-xxS = xS(1):splineRes:xS(end);
-sS = spline(xS,yS,xxS);
-pS = makima(xS,yS,xxS);
-plot(xxS,sS,'g','LineWidth',2)
+
+%fit errors to polynomials
+% yE(xE>5)=0;
+% p = polyfit(xE,yE,5)
+% yErrorFitted = polyval(p,[xE(1):0.01:xE(end)]);
+% plot([xE(1):0.01:xE(end)],yErrorFitted)
+% hold on
+% %fit signal to polynomials
+% p = polyfit(xS,yS,5)
+% ySignalFitted = polyval(p,[xS(1):0.01:xS(end)]);
+% plot([xS(1):0.01:xS(end)],ySignalFitted)
+
+
 
 hold off
 ylim([0 max(HErr.Values)*1.2])

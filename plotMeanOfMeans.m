@@ -21,7 +21,6 @@ AllDataArray = nan(length(Struct),maxMinutes); %to store all data
 for rep = 1:length(Struct)
     repData = getfield(Struct(rep),Field);
     repAbsTime = Struct(rep).AbsTime;
-    
     %linear interpolation to take means across discrete time data
     interpPoints = 500; %number of elements in the interpolated vector
     interpTimeVector = linspace(0,ceil(max(repAbsTime)),interpPoints);

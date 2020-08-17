@@ -7,7 +7,7 @@ ParticlesPerNucleus = nan(1,length(Nuclei));
 
 nucleicounter = 1;
 
-for n = 17:length(Nuclei)
+for n = 1:length(Nuclei)
     NucleusParticles = Nuclei(n).AssociatedParticles1;
     NucleusArea = Nuclei(n).Area;
     

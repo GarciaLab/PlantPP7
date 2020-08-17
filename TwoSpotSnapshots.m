@@ -6,10 +6,9 @@ function TwoSpotSnapshots(Prefix)
 % background
 DynamicsResultsPath = '/Users/simon_alamos/Dropbox/DynamicsResults';
 PrefixPath = [DynamicsResultsPath '/' Prefix];
-
 NuclearMaskPath = [PrefixPath '/FilledFilteredMask.mat'];
 try
-    load(NuclearMaskPath)
+    load(NuclearMaskPath);
 catch
 end
     
@@ -28,69 +27,6 @@ try
 load([PrefixPath '/' 'Ellipses.mat'])
 catch
 end
-%% In the case of time lapse movies run this part only
-
-[NucleiPerFrame, CompiledParticles] = ...
-    assignParticlesToEllipses(Ellipses,CompiledParticles,FrameInfo);
-
-figure
-hold on
-for frame = 1:length(NucleiPerFrame)
-    Nuclei = NucleiPerFrame(frame).Nuclei;
-    ParticlesPerNucleus = countSpotsPerNucleus(Nuclei,10);
-    [~, FractionOneSpot, ~, FractionTwoSpots,~, ~,TotalNuclei] = ...
-        NumberOfSpotsFractions (ParticlesPerNucleus);
-    MultinomialTestOfTwoSpots_norm(FractionOneSpot,FractionTwoSpots,ceil(TotalNuclei*0.5),0)
-end
-hold off
-title(Prefix,'interpreter','none')
-savefig([PrefixPath '/OneTwoSpots_scatter.fig'])
-ylim([0 1])
-
-DataOneSpot =[];
-DataTwoSpots = [];
-ExpectedOneSpot = [];
-ExpectedTwoSpot = [];
-ExpectedErrorOneSpot = [];
-ExpectedErrorTwoSpot = [];
-
-for frame = 1:length(NucleiPerFrame)
-    
-    Nuclei = NucleiPerFrame(frame).Nuclei;
-    ParticlesPerNucleus = countSpotsPerNucleus(Nuclei,10);
-    [~, FractionOneSpot, ~, FractionTwoSpots,~, ~,TotalNuclei] = ...
-        NumberOfSpotsFractions (ParticlesPerNucleus);
-    
-    DataOneSpot(frame) = FractionOneSpot*TotalNuclei;
-    DataTwoSpots(frame) = FractionTwoSpots*TotalNuclei;
-    
-    [ExpectedOneSpot(frame),ExpectedTwoSpot(frame),...
-        ExpectedErrorOneSpot(frame),ExpectedErrorTwoSpot(frame)] = ...
-    MultinomialTestOfTwoSpots_time(FractionOneSpot,FractionTwoSpots,TotalNuclei,frame)
-end
-
-
-AbsTime = [FrameInfo.Time]./60; %in minutes
-figure
-hold on
-shadedErrorBar(AbsTime,ExpectedOneSpot,ExpectedErrorOneSpot,'lineProps',...
-    {'Color','b','LineWidth',2,'LineStyle','--'})
-plot(AbsTime,DataOneSpot,'b-','LineWidth',2,'MarkerFaceColor','b')
-title(['One Spot ' Prefix],'interpreter','none')
-hold off
-savefig([PrefixPath '/OneSpot_time.fig'])
-ylim([0 max(ExpectedOneSpot+ExpectedErrorOneSpot)*1.2])
-
-
-figure
-hold on
-shadedErrorBar(AbsTime,ExpectedTwoSpot,ExpectedErrorTwoSpot,'lineProps',...
-    {'Color','r','LineWidth',2,'LineStyle','--'})
-plot(AbsTime,DataTwoSpots,'r-','LineWidth',2,'MarkerFaceColor','r')
-title(['Two Spot ' Prefix],'interpreter','none')
-hold off
-savefig([PrefixPath '/TwoSpots_time.fig'])
-ylim([0 max(DataTwoSpots)*1.2])
 
 %% flag overlapping particles so that we don't count them twice
 Particles = disapproveOverlappingParticles(Particles,Spots);
@@ -101,20 +37,32 @@ Particles = disapproveOverlappingParticles(Particles,Spots);
 % CompiledParticles = CompileParticles(Prefix);
 Nuclei = assignParticlesToNuclei (FilledFilteredMask,CompiledParticles);
 
-%% Particles per nucleus: analysis of results
+% Particles per nucleus: analysis of results
 AreaThreshold = 6000; % maximum number of pixels squared for a nucleus to be considered
 % nuclei larger than this are polyploid
 % now make a vector containing the number of spots per nucleus
 ParticlesPerNucleus = countSpotsPerNucleus(Nuclei,AreaThreshold);
 
+%% Count the number of nuclei with zero, one or two spots
 [FractionZeroSpots, FractionOneSpot, FractionOneOrTwoSpots, FractionTwoSpots,...
     FractionTwoOrMoreSpots, FractionActiveNuclei,TotalNuclei] = NumberOfSpotsFractions (ParticlesPerNucleus);
-close all
-hold on
-MultinomialTestOfTwoSpots_norm(FractionOneSpot,FractionTwoSpots,63,1)
+
+[bootstrappedOneSpotError(frame),bootstrappedTwoSpotError(frame),...
+ExpectedTwoSpot(frame),ExpectedErrorTwoSpot(:,frame),...
+Predicted_p(frame),ErrorPredicted_p(frame)] = ...
+MultinomialTestOfTwoSpots_time_v2(FractionOneSpot,FractionTwoSpots,TotalNuclei*FractionCompetent);
+
 hold off
 title(Prefix,'interpreter','none')
 savefig([PrefixPath '/OneTwoSpots_scatter.fig'])
+
+
+
+
+
+
+
+
 
 
 

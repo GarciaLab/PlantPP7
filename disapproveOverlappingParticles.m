@@ -20,12 +20,12 @@ for p1 = 1:length(Particles)
     end
 end
 
-imshow(ParticleMatrix,[])
+%imshow(ParticleMatrix,[])
 % triu extracts the upper triangular part of a matrix
 BadParticlesMatrix = triu(ParticleMatrix==0); %if a value outside the diagonal is 0 they are overlapping
 DiagonalEntries = diag(diag(BadParticlesMatrix)); % we don't want to take the diagonal into account
 BadParticlesMatrix(DiagonalEntries) = 0;
-imshow(BadParticlesMatrix)
+%imshow(BadParticlesMatrix)
 
 % we want to find positions in the matrix that are 1
 BadParticles = find(sum(BadParticlesMatrix,1)>0); %this returns the index of particles that had a distance of 0 to another one
@@ -52,26 +52,6 @@ end
 
 
 end
-
-
-
-% clearvars -except Particles SpotFilter
-% save('Particles.mat')
-% 
-% 
-% %%
-% 
-% for p = 1:length(Particles)
-%     CuratedParticles(p).Frames = Particles(p).Frame;
-%     CuratedParticles(p).xPos = Particles(p).xPos;
-%     CuratedParticles(p).yPos = Particles(p).yPos;
-%     ParticleSpotIndexes = Particles(p).Index;
-%     for i = 1:length(ParticleSpotIndexes)
-%         SpotFrame = CuratedParticles(p).Frames(i);
-%         SpotIndex = ParticleSpotIndexes(i);
-%         CuratedParticles(p).Fluo(i) = Spots(SpotFrame).Fits(SpotIndex).FixedAreaIntensity3;
-%     end
-% end
 
 
 

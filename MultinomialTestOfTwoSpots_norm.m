@@ -14,9 +14,9 @@ Error1spot = nan(1,length(valuesForP));
 Error2spot = nan(1,length(valuesForP));
 
 counter = 1;
-X1= [];
-X2= [];
-Y =[];
+Yup= [];
+Ydown= [];
+X =[];
 Y2 =[];
 for p = valuesForP
     p1 = 2*p*(1-p); %probability of x1
@@ -30,22 +30,17 @@ for p = valuesForP
     Error1spot(counter) = sqrt(Var1);
     Error2spot(counter) = sqrt(Var2);
 
-    X1(counter) = E1+sqrt(Var1)*2;
-    X2(counter) = E1-sqrt(Var1)*2;
+    Yup(counter) = E2+sqrt(Var2)*2;
+    Ydown(counter) = E2-sqrt(Var2)*2;
 %     X3(counter) = E1+sqrt(Var2)*2;
 %     X4(counter) = E1-sqrt(Var2)*2;
     ExpectedValues1(counter) = E1;
     ExpectedValues2(counter) = E2;
-    Y(counter) = E2;
+    X(counter) = E1;
     
     counter = counter+1;
 
 end
-% figure
-% hold on
-%plot(X1./TotalNuclei,Y./TotalNuclei,'-','Color','b')
-%plot(X2./TotalNuclei,Y./TotalNuclei,'-','Color','b')
-
 
 if bootstrap
     % plot data bootstrapping it
@@ -56,7 +51,8 @@ if bootstrap
         'CapSize',0,'LineWidth',2)
     errorbar(boostrpMeanFrac1Spot,boostrpMeanFrac2Spot,boostrpErrFrac2Spot,'k',...
         'CapSize',0,'LineWidth',2)
-    plot(boostrpMeanFrac1Spot,boostrpMeanFrac2Spot,'ko','Color','k','MarkerSize',7,'LineWidth',0)
+    plot(boostrpMeanFrac1Spot,boostrpMeanFrac2Spot,'ko','Color','k','MarkerSize',7,...
+        'MarkerFaceColor','w','LineWidth',2)
     
 else
     plot(FractionOneSpot,FractionTwoSpots,'ko','Color','k','MarkerFaceColor','k',...
@@ -64,6 +60,8 @@ else
 end
 
 plot(ExpectedValues1./TotalNuclei,ExpectedValues2./TotalNuclei,'r-','LineWidth',2)
+plot(X./TotalNuclei,Yup./TotalNuclei,'-','Color','b')
+plot(X./TotalNuclei,Ydown./TotalNuclei,'-','Color','b')
 %hold off
 
 xlabel('nuclei with one spot')
