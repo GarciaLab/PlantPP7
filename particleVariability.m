@@ -94,7 +94,7 @@ elseif strcmpi(Feature,'fluorescence')
     plotEdges = Edges(1:end-1);% + BinWidth;
     errorbar(plotEdges,nanmean(HistogramCounts,1),nanstd(HistogramCounts,1)./sqrt(counter),...
         'k','LineWidth',2,'CapSize',0)
-    plot([1-CV/2 1+CV/2],[0.25 0.25],'k')
+    plot([1-CV 1+CV],[0.25 0.25],'k')
     plot(1,0.25,'ko')
     hold off
     xlabel('fluo(t) (normalized by mean trace fluo)')
@@ -177,7 +177,7 @@ elseif strcmpi(Feature,'AllParticlesMean')
     histogram(NormAllParticles,logspace(-1.3,1.8,19),'Normalization','Probability',...
         'EdgeColor','k','DisplayStyle','Stairs','LineWidth',2);
     hold on
-    plot([Mean-SD/2 Mean+SD/2], [0.05 0.05],'k-')
+    plot([Mean-SD Mean+SD], [0.05 0.05],'k-')
     plot(Mean,0.05,'ko')
     hold off
     set(gca,'xscale','log')
@@ -285,29 +285,30 @@ elseif strcmpi(Feature,'Integral')
     %AbsNormAllParticles = (AllParticles.*PolPerAU)/AbsMean;
     SD = nanstd(AllIntegratedFluo);
     CV = SD/Mean;
-    Hist = histogram(log10(AllIntegratedFluo),19,'Normalization','Probability',...
-        'EdgeColor','k','DisplayStyle','Stairs','LineWidth',2)
+    LogBinEdges = logspace(0.5,5,19);
+    Hist = histogram(AllIntegratedFluo,LogBinEdges,'Normalization','Probability',...
+        'EdgeColor','k','DisplayStyle','Stairs','LineWidth',2);
     hold on
-    plot(log10([Mean-SD/2 Mean+SD/2]), [0.1 0.1],'k-')
-    plot(log10(Mean),0.1,'ko')
-    % gaussian fit to be fancier
-    % z(1), z(2), z(3) and z(4) (amplitude, center, spread and baseline)
-    DataX = [Hist.BinEdges(1)-Hist.BinWidth/2 mean([Hist.BinEdges(1:end-1);Hist.BinEdges(2:end)]) Hist.BinEdges(end)+Hist.BinWidth/2];
-    DataY = [0 Hist.Values 0];
-    Gaussfun = @(z)z(1) * exp(-(DataX-z(2)).^2./(2*(z(3)^2))) + z(4) - DataY; 
-    z0 = [0.02,log10(Mean),log10(Mean),0];
-    lb = [0.01,log10(Mean)*0.2,0.1,0]; % define lower bounds for each parameter
-    ub = [1,log10(Mean)*1.5,5,0]; % define upper bounds for each parameter, note that I'm forcing the baseline to be 0
-    Guess = lsqnonlin(Gaussfun,z0,lb,ub); %fit by minizing the subtraction between actual Y data and a gaussian
-    FitGauss = Guess(1)*exp(-(DataX-Guess(2)).^2./(2*(Guess(3)^2))) + Guess(4);
-    plot(DataX,FitGauss,'b','LineWidth',2)
+    plot([Mean-(SD/2) Mean+(SD/2)], [0.1 0.1],'r-')
+    plot(Mean,0.1,'bo')
+%     % gaussian fit to be fancier
+%     % z(1), z(2), z(3) and z(4) (amplitude, center, spread and baseline)
+%     DataX = [Hist.BinEdges(1)-Hist.BinWidth/2 mean([Hist.BinEdges(1:end-1);Hist.BinEdges(2:end)]) Hist.BinEdges(end)+Hist.BinWidth/2];
+%     DataY = [0 Hist.Values 0];
+%     Gaussfun = @(z)z(1) * exp(-(DataX-z(2)).^2./(2*(z(3)^2))) + z(4) - DataY; 
+%     z0 = [0.02,log10(Mean),log10(Mean),0];
+%     lb = [0.01,log10(Mean)*0.2,0.1,0]; % define lower bounds for each parameter
+%     ub = [1,log10(Mean)*1.5,5,0]; % define upper bounds for each parameter, note that I'm forcing the baseline to be 0
+%     Guess = lsqnonlin(Gaussfun,z0,lb,ub); %fit by minizing the subtraction between actual Y data and a gaussian
+%     FitGauss = Guess(1)*exp(-(DataX-Guess(2)).^2./(2*(Guess(3)^2))) + Guess(4);
+%     plot(DataX,FitGauss,'b','LineWidth',2)
     hold off
     %set(gca,'xscale','log')
     legend(['CV = ' num2str(CV)])
     title('integrated spot fluorescence')
     xlabel('log_{10} integrated fluorescence')
     ylabel('frequency')
-    
+    set(gca,'XScale','log')
 
 
 

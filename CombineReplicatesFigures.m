@@ -41,9 +41,9 @@ set(0, 'defaultTextFontName', 'Arial')
 
 %% Run the latest version of the post analysis code here
 % GoodPrefixes = [HsfA2Prefixes EF1alphaPrefixes HSP101Prefixes PulsePrefixes];
-% GoodPrefixes = HSP101Prefixes;
+GoodPrefixes = HSP101Prefixes;
 % GoodPrefixes = HsfA2Prefixes;
-GoodPrefixes = EF1alphaPrefixes;
+%GoodPrefixes = EF1alphaPrefixes;
 % 
 tic %to time how long this takes
 for p = 1:length(GoodPrefixes)    
@@ -230,29 +230,108 @@ particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'Integral
 
 
 %% JOYPLOT OF THE DISTRIBUTION OF INSTANTANEOUS PARTICLE FLUORESCENCE
+clearvars -except alignedDatasetsStruct PolPerAU
+close all
 % now make a moving window and show the distribution of particle
 % fluorescence
 % 'AllParticlesPerTime' array contains all the particles from all replicates aligned
 %in time
-AllParticlesPerTime = makeAllParticlesPerTime(alignedDatasetsStruct);
+baseline = 0;
+AllParticlesPerTime = makeAllParticlesPerTime(alignedDatasetsStruct,baseline);
+AllParticlesPerTime(AllParticlesPerTime<0) = 0;
+MeanInstaFractionOn = getMeanInstaFractionOn(alignedDatasetsStruct);
 
+% histograms of all spots at all times
+figure
+histogram(log10(PolPerAU.*AllParticlesPerTime(:)),40,'Normalization','probability')
+xlim([-1 3])
+title('RNAP')
+figure
+histogram(log10(AllParticlesPerTime(:)),40,'Normalization','probability')
+xlim(log10([(10^-1)/PolPerAU (10^3)/PolPerAU]))
+title('AUs')
+
+% histograms of all spots at t=10
+figure
+EarlySpots = AllParticlesPerTime(:,(6:14));
+histogram(log10(PolPerAU.*EarlySpots),15,'Normalization','probability')
+xlim([-1 3])
+title('RNAP')
+figure
+histogram(log10(EarlySpots),15,'Normalization','probability')
+xlim(log10([(10^-1)/PolPerAU (10^3)/PolPerAU]))
+title('AUs')
+
+
+
+AllParticlesPerTime(AllParticlesPerTime<0.1) = nan;
 MaxParticleFluo = nanmax(AllParticlesPerTime(:));
-bins = 20;
+bins = 22;
 LogEdges = logspace(0,log10(ceil(MaxParticleFluo)*2),bins);
-LinEdges = linspace(0,ceil(MaxParticleFluo),bins);
 HistData = [];
 % do the first detection frame manually
 [N,LogEdges] = histcounts(AllParticlesPerTime(:,1),LogEdges);
 HistData(:,1)=N;
 
 % then do a moving window of K frames
-K=3;
+K=4;
 counter = 1;
 for frame = K:size(AllParticlesPerTime,2)-K
     [N,LogEdges] = histcounts(AllParticlesPerTime(:,(frame:frame+K-1)),LogEdges);
     HistData(:,counter)=N;
     counter = counter+1;
 end
+
+
+%histogram(AllParticlesPerTime(:,(f:frame+K-1)))
+% %add the fraction off to the counts 
+% NCells = sum(HistData,1)./MeanInstaFractionOn(1:length(HistData));
+% NCells = median(NCells);
+% NOff = (1-MeanInstaFractionOn(1:length(HistData))).* NCells; %this is the number of off cells
+% HistData(1,:) = NOff;
+% NormHistData = HistData./NCells;
+% 
+% 
+% PickedFrames = [1,15,30,50];
+% Palette = viridis(length(PickedFrames));
+% counter = 1;
+% HistData(HistData<0.01) = nan;
+% HistData = log2(HistData);
+% HistData(isnan(HistData))=0;
+% hold on
+% for t = PickedFrames  
+%     figure
+%     histogram('BinEdges',LogEdges,'BinCounts',NormHistData(:,t),...
+%         'FaceColor',Palette(counter,:),'Normalization','probability')
+%     counter = counter+1;
+%     title(num2str(t))
+%     set(gca,'XScale','log')
+%     ylim([0 0.25])
+% end
+
+% close all
+% PickedFrames = 1:10:size(HistData,2);
+% Palette = viridis(length(PickedFrames));
+% counter = 1;
+% for t = PickedFrames
+%     figure
+%     histogram('BinEdges',PolPerAU.*LogEdges,'BinCounts',HistData(:,t),...
+%         'FaceColor',Palette(counter,:),'EdgeColor','none')
+%     title(['RNAP' num2str(t)])
+%     ylim([0 100])
+%     set(gca,'XScale','log')
+%     
+%    figure
+%    histogram('BinEdges',LogEdges,'BinCounts',HistData(:,t),...
+%        'FaceColor',Palette(counter,:),'EdgeColor','none')
+%    title(['AUs' num2str(t)])
+%    ylim([0 100])
+%    set(gca,'XScale','log')
+%     counter = counter+1;
+% end
+
+
+
 % these are the x and y values of a 2d plot, sort of
 % the bin edges and the counts in a histogram
 Bins = LogEdges(2:end);%1:bins-1;
@@ -261,43 +340,47 @@ Bins = LogEdges(2:end);%1:bins-1;
 %now the y values will correspond to the z values in a 3d plot and the x
 %values to the y values
 figure
-%Palette = viridis(length(1:7:size(AllParticlesPerTime,2)-5));
-PickedFrames = 1:5:90;
+PickedFrames = 1:5:71%size(HistData,2);
 Palette = viridis(length(PickedFrames));
-
 counter = 1;
-for frame = PickedFrames%size(AllParticlesPerTime,2)-5
+for frame = PickedFrames
     Counts = smoothdata(HistData(:,frame),3)';
-    %y = HistData(:,frame)';
-    %y = flip(y);
-    %Palette(counter,:)
-%     hFill = fill3(frame*ones(1, bins+1), x([1 1:end end]), [0 y 0],[.8 .8 1],...
-%     'LineWidth',1,'FaceAlpha', 1);
-    %for the logarithmic version:
     Color = Palette(counter,:);
-    hFill = fill3(frame*ones(1, bins+1), log10(Bins([1 1:end end])), [0 Counts 0],Color,...
-        'LineWidth',1,'FaceAlpha', 1);
+
+%     hFill = fill3(frame*ones(1, bins+1), log10(PolPerAU*Bins([1 1:end end])), [0 Counts 0],...
+%         Color,'LineWidth',1,'FaceAlpha', 1);
+    
+    hFill = fill3(frame*ones(1, bins+1), log10(Bins([1 1:end end])), [0 Counts 0],...
+        Color,'LineWidth',1,'FaceAlpha', 1);
+    
+    
     counter = counter+1;
     hold on
 end
+% plot detection threshold
+DetectionThresholdPols = log10(3);
+%plot([0 80],[DetectionThresholdPols DetectionThresholdPols],'k-o')
+plot([0 80],[1 1],'k-o')
+
+
 xlabel('time (min)')
-ylabel('log_{10}(spot fluorescence (AU))')
+ylabel('log_{10}(RNAP)')
 zlabel('number of cells')
-%FramesToTime = [FrameInfo.Time]./60; %in minutes
-%xticks(ceil(FramesToTime(PickedFrames(1:8:end))));
-%xticklabels(string(ceil(FramesToTime(PickedFrames(1:8:end)))))
 Caz = -90;
 Cel = 80;
 view([Caz Cel])
 set(gcf, 'Position',  [100, 100, 500, 700])
+ticksY = yticks;% powers of 10
+ylim([-1 3])
+ylim(log10([(10^-1)/PolPerAU (10^3)/PolPerAU]))
 
-figure
-imagesc(HistData)
-set(gca,'YTick',[1:size(HistData,1)],'YTickLabel',string(round(log10(Bins),2)))
-colorbar;
-colormap viridis
-xlabel('frames')
-ylabel('log_{10}(spot fluorescence (AU))')
+% figure
+% imagesc(HistData)
+% set(gca,'YTick',[1:size(HistData,1)],'YTickLabel',string(round(log10(Bins),2)))
+% colorbar;
+% colormap viridis
+% xlabel('frames')
+% ylabel('log_{10}(spot fluorescence (AU))')
 
 
 %% Noise, intrinsic vs extrinsic 
@@ -316,7 +399,8 @@ mkdir(FullResultsFolderPath)
 
 for P = 1:length(Prefixes)
     Prefix = Prefixes{P};
-    PrefixPath = [DynamicsResultsPath '/' Prefix];    
+    PrefixPath = [DynamicsResultsPath '/' Prefix]; 
+    ResultsFiguresPath = [PrefixPath '/ResultsFigures_' Prefix];
     load([PrefixPath '/' 'CompiledParticles.mat'],'CompiledParticles')
     %in some versions of the code CompiledParticles can be a struct within a cell
     if iscell(CompiledParticles) 
@@ -357,16 +441,13 @@ for P = 1:length(Prefixes)
 %    save([PrefixPath '/MeanFluo_homologSpots_wOff.mat'],'MeanFluo_homologSpots_withOff')
 end
 
-% Now decompose noise into intrinsic vs extrinsic components
-% first gather the data from all replicates
 close all
 %clearvars -except DynamicsResultsPath Prefixes FullResultsFolderPath
-
+% ***** GATHER DATA FROM ALL REPLICATES *****
 tONHomologs_allReps = [];
 IntegratedFluoHomologs_allReps = [];
 MeanFluoHomologs_allReps = [];
 IntegratedFluoHomologs_wOff_allReps =[];
-
 for P = 1:length(Prefixes)
     FolderName = [DynamicsResultsPath '/' Prefixes{P}];
 
@@ -396,8 +477,12 @@ Norm_MeanFluoHomologs_allReps = MeanFluoHomologs_allReps./nanmean(MeanFluoHomolo
 close all
 
 % Finally! make the noise figures and save
-
+refractory = 23;
+Norm_IntegratedFluoHomologs_wOff_allReps(Norm_IntegratedFluoHomologs_wOff_allReps<0.11)=0.01;
+Norm_IntegratedFluoHomologs_wOff_allReps = [Norm_IntegratedFluoHomologs_wOff_allReps ...
+    zeros(2,refractory)+0.01];
 CalculateNoiseComponents(Norm_IntegratedFluoHomologs_wOff_allReps)
+
 CalculateNoiseComponents(Norm_MeanFluoHomologs_allReps)
 CalculateNoiseComponents(Norm_IntegratedFluoHomologs_allReps)
 CalculateNoiseComponents(Norm_tONHomologs_allReps)
@@ -431,15 +516,17 @@ end
 %close all
 DynamicsResultsPath = '/Users/simon_alamos/Dropbox/DynamicsResults';
 
-%Prefix = '2020-03-11-AL13Rb-HsfA2_new_11.1_stepHS'; % individual Prefix
-%Prefix = '2019-02-16-12R-HSP101_HS_RT_HS_4';
-%Prefix = '2020-03-06-13Rb-HSP101-9.4_rep2';
-Prefix = '2020-03-06-13Rb-HSP101-9.4';
+%Prefix = '2020-03-11-AL13Rb-HsfA2_new_11.1_stepHS';peakFrame = 7;refractory = 8; % individual Prefix
+%Prefix = '2019-02-16-12R-HSP101_HS_RT_HS_4';peakFrame = 15;refractory = 13;
+Prefix = '2020-08-02-AL12R-HSP101-3_homozygote3';peakFrame = 10;refractory = 16;
+%Prefix = '2020-03-06-13Rb-HSP101-9.4_rep2';peakFrame = 9;refractory = 10;
+%Prefix = '2020-03-06-13Rb-HSP101-9.4';peakFrame = 12;refractory = 13;
 % these are the bounds to do the analysis averaging within these frames
 % only
-pickedFrame = 10;
+pickedFrame = 15;
 fractionCompetent = 1;
-TwoSpotIndependenceAnalysis(Prefix,DynamicsResultsPath,pickedFrame,fractionCompetent)
+%TwoSpotIndependenceAnalysis(Prefix,DynamicsResultsPath,pickedFrame,fractionCompetent)
+TwoSpotIndependenceAnalysisv2(Prefix,DynamicsResultsPath,pickedFrame,fractionCompetent)
 
 
 %% Nuclear size distribution

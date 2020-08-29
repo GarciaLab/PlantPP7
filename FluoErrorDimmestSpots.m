@@ -40,7 +40,7 @@ A = [ParticlesDimmestSpotsMean;ParticlesError]';
 B = sortrows(A,1,'ascend'); % the second argument specifies which row is the reference one
 
 %% Plot
-N = 120;
+N = 180;
 DimOfDimmestSignal = B((1:N),1);
 DimOfDimmestError = B((1:N),2);
 
@@ -50,10 +50,10 @@ DimOfDimmestError_RNAP = DimOfDimmestError .* PolPerAU;
 close all
 figure(2)
 hold on
-HErr = histogram(DimOfDimmestError_RNAP,'BinWidth',.6,'Normalization','probability','FaceColor','b',...
-    'EdgeColor','none')%,'FaceAlpha',.15);
-HSign = histogram(DimOfDimmestSignal_RNAP,'BinWidth',.7,'Normalization','probability','FaceColor','g',...
-    'EdgeColor','none')%,'FaceAlpha',.15);
+HErr = histogram(DimOfDimmestError_RNAP,'BinWidth',.4,'Normalization','probability','FaceColor','b',...
+    'EdgeColor','k')%,'FaceAlpha',.15);
+HSign = histogram(DimOfDimmestSignal_RNAP,'BinWidth',.4,'Normalization','probability','FaceColor','g',...
+    'EdgeColor','k')%,'FaceAlpha',.15);
 xlabel('number of RNAP')
 ylabel('frequency')
 
@@ -89,7 +89,7 @@ ylabel('frequency')
 
 hold off
 ylim([0 max(HErr.Values)*1.2])
-xlim([0 8])
+xlim([0 9])
 
 %figure(3)
 

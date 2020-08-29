@@ -26,9 +26,11 @@ if strfind(Prefixes{1},'HsfA2')
                 DataStruct(p).(FieldNames{f}) = AlignedFieldData;
             end
         elseif size(FieldData,1)> 1 %deal with the arrays here
-            FieldData = DataStruct(p).(FieldNames{f});
-            AlignedFieldData = [ones(size(FieldData,1),shifts(p)).*[1:shifts(p)] FieldData];
-            DataStruct(p).(FieldNames{f}) = AlignedFieldData;
+            for p = 1:length(DataStruct)
+                FieldData = DataStruct(p).(FieldNames{f});
+                AlignedFieldData = [zeros(size(FieldData,1),shifts(p)).*[1:shifts(p)] FieldData];
+                DataStruct(p).(FieldNames{f}) = AlignedFieldData;
+            end
         end
     end   
 

@@ -1,4 +1,4 @@
-function OutputArray = CreateOffHomologDataArray(CompiledParticles,FrameInfo,Feature,lastCommonTime)
+function OutputArray = CreateOffHomologDataArray(CompiledParticles,FrameInfo,Feature,lastCommonTime,ResultsFiguresPath)
 
 % Feature can be 'IntegratedFluo', 'MeanFluo' or 'Duration'
 baselineAUs = 10; %the fluorescence assigned to undetected spots
@@ -56,10 +56,23 @@ end
 AbsTime = [FrameInfo.Time]./60;
 frameRate = 1; %minutes per frame
 
-if strcmpi(Feature,'IntegratedFluo')
-    LastCommonFrame = find(AbsTime<lastCommonTime,1,'last');
 
-    
+if strcmpi(Feature,'IntegratedFluo')
+      
+%     % DEAL WITH OFF NUCLEI WHERE BOTH ALLELES ARE OFF ALL THE TIME
+%     %get the number of nuclei per frame
+%     FigFileName = 'CellsPerFrame.fig';
+%     F1 = open([ResultsFiguresPath '/' FigFileName]);
+%     YdataObjs = findobj(F1,'-property','YData');
+%     NucleiPerFrame = YdataObjs(2).YData; 
+% 
+%     %get the number of spots per frame
+%     FigFileName = 'SpotNumber.fig';
+%     F2 = open([SingleTracesPath '/' FigFileName]);
+%     YdataObjs = findobj(F2,'-property','YData');
+%     SpotsPerFrame = YdataObjs(1).YData; 
+%    
+    LastCommonFrame = find(AbsTime<lastCommonTime,1,'last');  
     hold on
     usedParticles = [0]; %to keep track of things
     AllFirstParticlesInt = [];%nan(1,length(CompiledParticles)); %to store data
@@ -136,6 +149,8 @@ if strcmpi(Feature,'IntegratedFluo')
     title('Integrated Particle Fluorescence Over Time')
 end
 
+%now add the nuclei that never had particles
+
 %%  TIME ON
 AbsTime = [FrameInfo.Time]./60;
 lastFrame = AbsTime(end);
@@ -163,14 +178,15 @@ if strcmpi(Feature,'tOn')
             AllSecondParticlestON = [AllSecondParticlestON ValuePair(2)];
             usedParticles = [usedParticles p1 HomParticle];
 
-        elseif HomParticle==0 || any(usedParticles==HomParticle) ||...
-            CompiledParticles(HomParticle).HomologParticle ~= p1%~any(usedParticles==p1)% 
-            ValuePair = [tON1 lastFrame];
-            ValuePair = ValuePair(randperm(length(ValuePair)));
-            AllFirstParticlestON = [AllFirstParticlestON ValuePair(1)];
-            AllSecondParticlestON = [AllSecondParticlestON ValuePair(2)];
-            usedParticles = [usedParticles p1];         
-        end
+            % this was to include spots that never turn on
+%         elseif HomParticle==0 || any(usedParticles==HomParticle) ||...
+%             CompiledParticles(HomParticle).HomologParticle ~= p1%~any(usedParticles==p1)% 
+%             ValuePair = [tON1 lastFrame];
+%             ValuePair = ValuePair(randperm(length(ValuePair)));
+%             AllFirstParticlestON = [AllFirstParticlestON ValuePair(1)];
+%             AllSecondParticlestON = [AllSecondParticlestON ValuePair(2)];
+%             usedParticles = [usedParticles p1];         
+%         end
 
     end
         
