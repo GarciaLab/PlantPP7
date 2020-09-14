@@ -20,6 +20,12 @@ HSP101Prefixes = {'2019-02-16-12R-HSP101_HS_7','2019-02-16-12R-HSP101_HS_5','201
     '2019-02-16-12R-HSP101_HS_2','2019-02-16-12R-HSP101_HS_1','2019-02-07-12R-HSP101-HS4',...
     '2019-02-07-12R-HSP101_HS_3','2019-02-07-12R-HSP101_HS_1'};%,'2019-02-07-12R-HSP101_HS2',...
     %'2018-10-23-AL12R-HSP101-3_HS'};
+    
+AllRPT2Prefixes = {'2020-07-02-RPT2-B','2020-07-02-RPT2-F','2020-07-02-RPT2-G','2020-07-12-RPT2-A_2',...
+    '2020-07-12-RPT2-A_3','2020-07-12-RPT2-F_2','2020-08-12-RPT2-F_3'};
+RPT2F = {'2020-07-02-RPT2-F','2020-07-12-RPT2-F_2','2020-08-12-RPT2-F_3'};
+RPT2A = {'2020-07-12-RPT2-A_2','2020-07-12-RPT2-A_3'};
+
 
 PulsePrefixes = {'2019-02-16-12R-HSP101_HS_RT_HS_4','2019-02-16-12R-HSP101-HS_RT_HS'};
 
@@ -41,9 +47,9 @@ set(0, 'defaultTextFontName', 'Arial')
 
 %% Run the latest version of the post analysis code here
 % GoodPrefixes = [HsfA2Prefixes EF1alphaPrefixes HSP101Prefixes PulsePrefixes];
-% GoodPrefixes = HSP101Prefixes;
+GoodPrefixes = HSP101Prefixes;
 % GoodPrefixes = HsfA2Prefixes;
-GoodPrefixes = EF1alphaPrefixes;
+%GoodPrefixes = EF1alphaPrefixes;
 % 
 tic %to time how long this takes
 for p = 1:length(GoodPrefixes)    
@@ -55,9 +61,10 @@ toc
 
 
 %% Pick a group of prefixes and intialize a struct to store everything about each replicate
-%Prefixes = HSP101Prefixes;
-Prefixes = HsfA2Prefixes;
+Prefixes = HSP101Prefixes;
+%Prefixes = HsfA2Prefixes;
 %Prefixes = EF1alphaPrefixes;
+%Prefixes = RPT2A;
 
 for p = 1:length(Prefixes)
     DatasetsStruct(p).Prefix = Prefixes{p};
@@ -108,6 +115,7 @@ end
 % also, with and without normalization to t=60
 
 samplingTimes = [0,5,10,15,30,60]; %in minutes, for interpolation in MeanAccumulatedmRNA function
+samplingTimes = linspace(0,60,60);
 GammaVals = logspace(-4,-1,6); %degradation rate of mRNA in mRNAs/frame or /min. log(2)/gamma = half life in minutes
 
 %figure without normalization, show several degradation rates
@@ -227,6 +235,8 @@ particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'fluoresc
 %particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'AllParticles',peakTime)
 particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'AllParticlesMean',[],PolPerAU)
 particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'Integral')
+particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'IntegralWithDegradation',[],[)
+particleVariability(alignedDatasetsStruct,Prefixes,DynamicsResultsPath,'PeakFluo')
 
 
 %% JOYPLOT OF THE DISTRIBUTION OF INSTANTANEOUS PARTICLE FLUORESCENCE
@@ -516,11 +526,11 @@ end
 %close all
 DynamicsResultsPath = '/Users/simon_alamos/Dropbox/DynamicsResults';
 
-Prefix = '2020-03-11-AL13Rb-HsfA2_new_11.1_stepHS';peakFrame = 7;refractory = 8; % individual Prefix
+%Prefix = '2020-03-11-AL13Rb-HsfA2_new_11.1_stepHS';peakFrame = 7;refractory = 8; % individual Prefix
 %Prefix = '2019-02-16-12R-HSP101_HS_RT_HS_4';peakFrame = 15;refractory = 13;
 %Prefix = '2020-08-02-AL12R-HSP101-3_homozygote3';peakFrame = 10;refractory = 16;
 %Prefix = '2020-03-06-13Rb-HSP101-9.4_rep2';peakFrame = 9;refractory = 10;
-%Prefix = '2020-03-06-13Rb-HSP101-9.4';peakFrame = 12;refractory = 13;
+Prefix = '2020-03-06-13Rb-HSP101-9.4';peakFrame = 12;refractory = 13;
 % these are the bounds to do the analysis averaging within these frames
 % only
 pickedFrame = 15;
@@ -604,6 +614,13 @@ HSP101_9_1 = [1.02791469];
 % 13Rb-HSP101-9 T1 data from '1_25_20_copynumber_rep_data'
 HSP101_9 = [0.541104573];
 
+% data from '10_30_19 and 9_2_20_copynumber and 9_3_20_copynumber'
+HsfA2_F2 = [3.029,2.8284,2.64,3.38,3.07];
+
+HSP101_3 = [5.37, 3.95,4.53];
+
+
+
 figure
 hold on
 
@@ -622,6 +639,22 @@ grid on
 xlim([0 5])
 ylabel('copies')
 
+
+figure
+hold on
+
+plot(2,HsfA2_F2,'ro','MarkerSize',10,'MarkerFaceColor','r')
+errorbar(2,mean(HsfA2_F2),std(HsfA2_F2)/length(HsfA2_F2),'ko','CapSize',0)
+
+HSP101_3 = HSP101_3/2; %because it was a homozygote
+plot(1,HSP101_3,'ro','MarkerSize',10,'MarkerFaceColor','r')
+errorbar(1,mean(HSP101_3),std(HSP101_3)/length(HSP101_3),'ko','CapSize',0)
+
+hold off
+grid on
+xlim([0.5 2.5])
+ylim([1 5])
+ylabel('copies')
 
 
 

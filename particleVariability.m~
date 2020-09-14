@@ -361,7 +361,7 @@ elseif strcmpi(Feature,'IntegralWithDegradation')
     
     
     
-    histogram(log10(AllReplicatesSpotsAccFluo),20,'Normalization','Probability');
+    histogram(log10(AllReplicatesSpotsAccFluo),'Normalization','Probability');
     
     title(['CV= ' num2str(std(AllReplicatesSpotsAccFluo)./mean(AllReplicatesSpotsAccFluo)) ...
         '  %Off= ' num2str(sum((AllReplicatesSpotsAccFluo==0))./length(AllReplicatesSpotsAccFluo)) ...

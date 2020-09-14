@@ -1,0 +1,27 @@
+
+lastCommonTimePoint = 60;
+i = 1;
+AllParticles = alignedDatasetsStruct(i).AllParticles;
+AllParticles(isnan(AllParticles))=0; %count off nuclei as having zero fluorescence
+RepAbsTime = alignedDatasetsStruct(i).AbsTime;
+Offset = size(AllParticles,2)-size(RepAbsTime,2)+1;
+interpPoints = 500;
+
+for p = 1:size(AllParticles,1)
+    particleFluo = AllParticles(p,Offset:end);
+    interpTime = linspace(0,ceil(max(RepAbsTime)),interpPoints);
+    interpFluo = interp1(RepAbsTime,particleFluo,interpTime);
+    interpFluo(isnan(interpFluo))=0;
+    particleAccumulatedFluo = cumtrapz(interpTime,interpFluo);
+    particleAccumulatedFluoDeg(1) = 0;
+    
+    for t = 2:length(interpTime)
+        AccumulatedFluoPreviousStep = particleAccumulatedFluoDeg(t-1);
+        Production = AccuFluo(t) - AccuFluo(t-1)
+    end
+        
+end
+    
+    
+    
+    
